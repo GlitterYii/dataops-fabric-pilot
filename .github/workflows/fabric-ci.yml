@@ -1,0 +1,18 @@
+name: Fabric CI (Pilot)
+
+on:
+  push:
+    branches: [ 'dev', 'feature/**' ]
+  pull_request:
+    branches: [ 'staging', 'main' ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install fabric-cicd
+      - run: echo "placeholder test step — ใส่ pytest/great_expectations จริงทีหลัง"
