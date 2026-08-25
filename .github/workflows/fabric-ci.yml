@@ -15,4 +15,4 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install fabric-cicd
-      - run: echo exit 1
+      - run: exit 1
