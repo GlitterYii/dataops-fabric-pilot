@@ -15,4 +15,4 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install fabric-cicd
-      - run: echo "placeholder test step — ใส่ pytest/great_expectations จริงทีหลัง"
+      - run: echo exit 1
