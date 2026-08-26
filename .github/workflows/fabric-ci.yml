@@ -15,4 +15,21 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install fabric-cicd
+
+      - name: Ensure every pipeline has a test
+        run: |
+          missing=0
+          for item in fabric_items/*/; do
+            name=$(basename "$item")
+            name="${name%.Notebook}"
+            name="${name%.DataPipeline}"
+            if [ ! -f "tests/unit/test_${name}.py" ]; then
+              echo "::error::No test found for '$name' (expected tests/unit/test_${name}.py)"
+              missing=1
+            fi
+          done
+          if [ "$missing" -eq 1 ]; then
+            exit 1
+          fi
+
       - run: echo "placeholder test step — ใส่ pytest/great_expectations จริงทีหลัง"
