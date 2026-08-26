@@ -11,9 +11,8 @@
 
 # CELL ********************
 
-# Welcome to your new notebook
-# Type here in the cell editor to add code!
-
+## Test fail
+import pandas as pd
 
 # METADATA ********************
 
