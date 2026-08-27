@@ -11,9 +11,9 @@
 
 # CELL ********************
 
-## Test fail
-import pandas as pd
-## Arai mai roo
+# Welcome to your new notebook
+# Type here in the cell editor to add code!
+
 
 # METADATA ********************
 
