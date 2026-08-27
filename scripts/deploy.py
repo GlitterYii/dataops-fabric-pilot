@@ -1,4 +1,5 @@
 import os
+import shutil
 import argparse
 from fabric_cicd import FabricWorkspace, publish_all_items
 from azure.identity import InteractiveBrowserCredential
@@ -7,10 +8,23 @@ from azure.identity import InteractiveBrowserCredential
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ITEMS_DIR = os.path.join(BASE_DIR, "..", "fabric_items")
 
+
+def _clean_pycache(root: str) -> None:
+    # fabric-cicd ส่งทุกไฟล์ที่เจอในโฟลเดอร์ item เป็น definition part — __pycache__/*.pyc
+    # ที่หลุดเข้ามา (เช่นจากรัน pytest ที่ import notebook-content.py ตรงๆ) ทำให้ publish fail
+    # ด้วย error "doesn't support definition parts with empty payload"
+    for dirpath, dirnames, _ in os.walk(root):
+        if "__pycache__" in dirnames:
+            shutil.rmtree(os.path.join(dirpath, "__pycache__"))
+            dirnames.remove("__pycache__")
+
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--workspace", required=True, help="Fabric workspace ID (GUID)")
 parser.add_argument("--environment", default="dev")
 args = parser.parse_args()
+
+_clean_pycache(REPO_ITEMS_DIR)
 
 # TODO: เปลี่ยนเป็น ClientSecretCredential (Service Principal) เมื่อ IT อนุมัติแล้ว
 # ดูตัวอย่างใน Setup-Guide-Git-Fabric.md section 3
