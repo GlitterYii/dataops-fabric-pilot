@@ -2,7 +2,11 @@
 # check ที่รองรับตอนนี้: unit_test | data_quality | structure | schema | none
 #
 # ถ้า item ไหนไม่ถูกระบุในไฟล์นี้เลย ให้ default เป็น check: unit_test เสมอ (fail-safe เข้มสุด)
-# การยกเว้น/เปลี่ยน pattern ต้องประกาศไว้ชัดเจนตรงนี้ ไม่ปล่อยผ่านแบบเงียบๆ
+#
+# Opt-out รายตัว (ใช้ได้กับทุก pattern รวม structure/schema):
+#   skip_check: true
+#   skip_reason: "<เหตุผลที่ต้องระบุ ไม่ปล่อยผ่านแบบเงียบๆ>"
+# ต่างจาก check: none ตรงที่ยังคง label ว่า item นี้ "ควรจะ" เช็คแบบไหนไว้ (เผื่อกลับมาเปิดทีหลัง)
 #
 # ข้อดี: Fabric ออก item type ใหม่กี่ตัวก็ตาม (Eventstream, KQL Database, Reflex, ...)
 # แค่เพิ่ม entry ที่นี่แล้วแม็ปไปยัง check pattern ที่มีอยู่แล้ว ไม่ต้องแก้ fabric-ci.yml เลย
