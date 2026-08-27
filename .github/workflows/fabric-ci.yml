@@ -25,6 +25,19 @@ jobs:
             folder=$(basename "$item")
             name="${folder%.*}"
 
+            # opt-out รายตัว ใช้ได้กับทุก pattern — ต้องระบุเหตุผลเสมอ ไม่ปล่อยผ่านแบบเงียบๆ
+            skip=$(yq ".${name}.skip_check // false" ci-config.yml)
+            if [ "$skip" = "true" ]; then
+              reason=$(yq ".${name}.skip_reason // \"NO REASON GIVEN\"" ci-config.yml)
+              if [ "$reason" = "NO REASON GIVEN" ]; then
+                echo "::error::[$name] skip_check=true but skip_reason is missing in ci-config.yml"
+                missing=1
+              else
+                echo "::notice::[$name] check skipped — reason: $reason"
+              fi
+              continue
+            fi
+
             check=$(yq ".${name}.check // \"unit_test\"" ci-config.yml)
 
             case "$check" in
@@ -47,13 +60,19 @@ jobs:
                 ;;
 
               structure)
-                if [ -f "scripts/validate_pipeline_structure.py" ]; then
+                if [ ! -f "scripts/validate_pipeline_structure.py" ]; then
+                  echo "::error::[$name] check=structure but scripts/validate_pipeline_structure.py is missing"
+                  missing=1
+                else
                   python scripts/validate_pipeline_structure.py "$item"
                 fi
                 ;;
 
               schema)
-                if [ -f "scripts/validate_schema_contract.py" ]; then
+                if [ ! -f "scripts/validate_schema_contract.py" ]; then
+                  echo "::error::[$name] check=schema but scripts/validate_schema_contract.py is missing"
+                  missing=1
+                else
                   python scripts/validate_schema_contract.py "$item"
                 fi
                 ;;
@@ -86,24 +105,32 @@ jobs:
 
             fabric_type=$(yq ".${name}.fabric_type // \"${folder##*.}\"" ci-config.yml)
             check=$(yq ".${name}.check // \"unit_test\"" ci-config.yml)
+            skip=$(yq ".${name}.skip_check // false" ci-config.yml)
 
-            case "$check" in
-              unit_test)
-                [ -f "tests/unit/test_${name}.py" ] && status="✅" || status="❌ missing"
-                ;;
-              data_quality)
-                [ -f "great_expectations/checkpoints/dq_${name}.yml" ] && status="✅" || status="❌ missing"
-                ;;
-              structure|schema)
-                status="✅"
-                ;;
-              none)
-                status="⏭️ skipped (intentional)"
-                ;;
-              *)
-                status="⚠️ unknown pattern"
-                ;;
-            esac
+            if [ "$skip" = "true" ]; then
+              status="⏭️ skipped (see skip_reason)"
+            else
+              case "$check" in
+                unit_test)
+                  [ -f "tests/unit/test_${name}.py" ] && status="✅" || status="❌ missing"
+                  ;;
+                data_quality)
+                  [ -f "great_expectations/checkpoints/dq_${name}.yml" ] && status="✅" || status="❌ missing"
+                  ;;
+                structure)
+                  [ -f "scripts/validate_pipeline_structure.py" ] && status="✅" || status="❌ missing"
+                  ;;
+                schema)
+                  [ -f "scripts/validate_schema_contract.py" ] && status="✅" || status="❌ missing"
+                  ;;
+                none)
+                  status="⏭️ skipped (intentional)"
+                  ;;
+                *)
+                  status="⚠️ unknown pattern"
+                  ;;
+              esac
+            fi
 
             echo "| $name | $fabric_type | $check | $status |" >> "$GITHUB_STEP_SUMMARY"
           done
