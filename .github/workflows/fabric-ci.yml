@@ -14,22 +14,90 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: pip install fabric-cicd
+      - run: pip install fabric-cicd pytest
 
-      - name: Ensure every pipeline has a test
+      - name: Run checks based on item type
         run: |
           missing=0
           for item in fabric_items/*/; do
-            name=$(basename "$item")
-            name="${name%.Notebook}"
-            name="${name%.DataPipeline}"
-            if [ ! -f "tests/unit/test_${name}.py" ]; then
-              echo "::error::No test found for '$name' (expected tests/unit/test_${name}.py)"
-              missing=1
+            folder=$(basename "$item")
+
+            if [[ "$folder" == *.Notebook ]]; then
+              name="${folder%.Notebook}"
+              config=$(yq ".${name}.requires_unit_test // true" ci-config.yml)
+              if [ "$config" = "true" ]; then
+                if [ ! -f "tests/unit/test_${name}.py" ]; then
+                  echo "::error::No unit test found for Notebook '$name' (expected tests/unit/test_${name}.py)"
+                  missing=1
+                else
+                  pytest "tests/unit/test_${name}.py"
+                fi
+              fi
+
+            elif [[ "$folder" == *.Dataflow ]]; then
+              name="${folder%.Dataflow}"
+              config=$(yq ".${name}.requires_data_quality_check // true" ci-config.yml)
+              if [ "$config" = "true" ]; then
+                if [ ! -f "great_expectations/checkpoints/dq_${name}.yml" ]; then
+                  echo "::error::No data quality checkpoint found for Dataflow '$name'"
+                  missing=1
+                else
+                  great_expectations checkpoint run "dq_${name}"
+                fi
+              fi
+
+            elif [[ "$folder" == *.DataPipeline ]]; then
+              name="${folder%.DataPipeline}"
+              if [ -f "scripts/validate_pipeline_structure.py" ]; then
+                python scripts/validate_pipeline_structure.py "$item"
+              fi
+
+            elif [[ "$folder" == *.Lakehouse || "$folder" == *.Warehouse ]]; then
+              name="${folder%.*}"
+              if [ -f "scripts/validate_schema_contract.py" ]; then
+                python scripts/validate_schema_contract.py "$item"
+              fi
             fi
           done
           if [ "$missing" -eq 1 ]; then
+            echo "::error::Some items are missing required checks — see log above"
             exit 1
           fi
 
-      - run: echo "placeholder test step — ใส่ pytest/great_expectations จริงทีหลัง"
+      - name: Generate check summary table
+        if: always()
+        run: |
+          echo "## Fabric Item Check Summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Item | Type | Required Check | Status |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|---|---|---|---|" >> "$GITHUB_STEP_SUMMARY"
+
+          for item in fabric_items/*/; do
+            folder=$(basename "$item")
+            name="${folder%.*}"
+            type="${folder##*.}"
+
+            case "$type" in
+              Notebook)
+                check="Unit Test"
+                [ -f "tests/unit/test_${name}.py" ] && status="✅" || status="❌ missing"
+                ;;
+              Dataflow)
+                check="Data Quality Check"
+                [ -f "great_expectations/checkpoints/dq_${name}.yml" ] && status="✅" || status="❌ missing"
+                ;;
+              DataPipeline)
+                check="Structure Validation"
+                status="✅"
+                ;;
+              Lakehouse|Warehouse)
+                check="Schema Contract"
+                status="✅"
+                ;;
+              *)
+                check="Unknown type"
+                status="⚠️"
+                ;;
+            esac
+
+            echo "| $name | $type | $check | $status |" >> "$GITHUB_STEP_SUMMARY"
+          done
