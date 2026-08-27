@@ -5,3 +5,13 @@
 nb_test_connection:
   type: Notebook
   requires_unit_test: true
+
+nb_sales_transform:
+  type: Notebook
+  requires_unit_test: true
+
+pl_test_pipeline:
+  type: DataPipeline
+
+lh_test_lakehouse:
+  type: Lakehouse
