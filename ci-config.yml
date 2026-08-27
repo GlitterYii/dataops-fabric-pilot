@@ -1,0 +1,24 @@
+# กำหนดว่า item แต่ละตัว "ต้องเช็คแบบไหน" (check pattern) ไม่ใช่ผูกกับ Fabric item type ตรงๆ
+# check ที่รองรับตอนนี้: unit_test | data_quality | structure | schema | none
+#
+# ถ้า item ไหนไม่ถูกระบุในไฟล์นี้เลย ให้ default เป็น check: unit_test เสมอ (fail-safe เข้มสุด)
+# การยกเว้น/เปลี่ยน pattern ต้องประกาศไว้ชัดเจนตรงนี้ ไม่ปล่อยผ่านแบบเงียบๆ
+#
+# ข้อดี: Fabric ออก item type ใหม่กี่ตัวก็ตาม (Eventstream, KQL Database, Reflex, ...)
+# แค่เพิ่ม entry ที่นี่แล้วแม็ปไปยัง check pattern ที่มีอยู่แล้ว ไม่ต้องแก้ fabric-ci.yml เลย
+
+nb_test_connection:
+  fabric_type: Notebook
+  check: unit_test
+
+nb_sales_transform:
+  fabric_type: Notebook
+  check: unit_test
+
+pl_test_pipeline:
+  fabric_type: DataPipeline
+  check: structure
+
+lh_test_lakehouse:
+  fabric_type: Lakehouse
+  check: schema
