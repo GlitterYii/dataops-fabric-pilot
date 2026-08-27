@@ -2,9 +2,11 @@
   "properties": {
     "activities": [
       {
-        "name": "RunSalesTransform",
         "type": "TridentNotebook",
-        "dependsOn": [],
+        "typeProperties": {
+          "notebookId": "c6253eb1-b5f9-bb1a-4ed4-efc147402b7c",
+          "workspaceId": "00000000-0000-0000-0000-000000000000"
+        },
         "policy": {
           "timeout": "0.12:00:00",
           "retry": 0,
@@ -12,10 +14,8 @@
           "secureInput": false,
           "secureOutput": false
         },
-        "typeProperties": {
-          "notebookId": "c6253eb1-b5f9-bb1a-4ed4-efc147402b7c",
-          "workspaceId": "00000000-0000-0000-0000-000000000000"
-        }
+        "name": "RunSalesTransform",
+        "dependsOn": []
       }
     ]
   }
