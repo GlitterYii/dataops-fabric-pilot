@@ -2,7 +2,7 @@ name: Fabric CI (Pilot)
 
 on:
   push:
-    branches: [ 'dev', 'feature/**' ]
+    branches: [ 'dev', 'main', 'feature/**' ]
   pull_request:
     branches: [ 'staging', 'main' ]
 
