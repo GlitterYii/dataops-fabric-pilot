@@ -134,3 +134,22 @@ jobs:
 
             echo "| $name | $fabric_type | $check | $status |" >> "$GITHUB_STEP_SUMMARY"
           done
+
+  deploy-prod:
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: production   # ต้องไปสร้าง environment ชื่อ "production" ใน Settings → Environments
+                               # แล้วเพิ่ม Required reviewers ก่อน ไม่งั้น deploy จะรันทันทีไม่มีใครเช็คก่อน
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - name: Deploy to Fabric (production)
+        run: python scripts/deploy.py --workspace 84cc9682-9946-44a6-83b4-9275ebfb9834 --environment prod
+        env:
+          FABRIC_CLIENT_ID: ${{ secrets.FABRIC_CLIENT_ID }}
+          FABRIC_CLIENT_SECRET: ${{ secrets.FABRIC_CLIENT_SECRET }}
+          FABRIC_TENANT_ID: ${{ secrets.FABRIC_TENANT_ID }}
