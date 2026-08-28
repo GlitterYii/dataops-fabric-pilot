@@ -31,13 +31,14 @@ def calculate_regional_sales(records):
 
 # CELL ********************
 
-df = spark.read.table("lh_test_lakehouse.sales_raw")
-records = [row.asDict() for row in df.collect()]
-result = calculate_regional_sales(records)
-spark.createDataFrame(
-    [(region, total) for region, total in result.items()],
-    ["region", "total_sales"],
-).write.mode("overwrite").saveAsTable("sales_by_region")
+if __name__ == "__main__":
+    df = spark.read.table("lh_test_lakehouse.sales_raw")
+    records = [row.asDict() for row in df.collect()]
+    result = calculate_regional_sales(records)
+    spark.createDataFrame(
+        [(region, total) for region, total in result.items()],
+        ["region", "total_sales"],
+    ).write.mode("overwrite").saveAsTable("sales_by_region")
 
 # METADATA ********************
 
