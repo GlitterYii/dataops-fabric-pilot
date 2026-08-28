@@ -2,7 +2,7 @@ import os
 import shutil
 import argparse
 from fabric_cicd import FabricWorkspace, publish_all_items
-from azure.identity import InteractiveBrowserCredential
+from azure.identity import ClientSecretCredential
 
 # หา path ของ fabric_items แบบ absolute อ้างอิงจากตำแหน่งไฟล์นี้เอง (อยู่ใน scripts/ ต้องขึ้นไป 1 ชั้น)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -26,9 +26,11 @@ args = parser.parse_args()
 
 _clean_pycache(REPO_ITEMS_DIR)
 
-# TODO: เปลี่ยนเป็น ClientSecretCredential (Service Principal) เมื่อ IT อนุมัติแล้ว
-# ดูตัวอย่างใน Setup-Guide-Git-Fabric.md section 3
-credential = InteractiveBrowserCredential()
+credential = ClientSecretCredential(
+    tenant_id=os.environ["FABRIC_TENANT_ID"],
+    client_id=os.environ["FABRIC_CLIENT_ID"],
+    client_secret=os.environ["FABRIC_CLIENT_SECRET"],
+)
 
 workspace = FabricWorkspace(
     workspace_id=args.workspace,
