@@ -134,3 +134,20 @@ jobs:
 
             echo "| $name | $fabric_type | $check | $status |" >> "$GITHUB_STEP_SUMMARY"
           done
+
+  deploy:
+    needs: test
+    if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - name: Deploy to Fabric (dev)
+        run: python scripts/deploy.py --workspace 84cc9682-9946-44a6-83b4-9275ebfb9834 --environment dev
+        env:
+          FABRIC_CLIENT_ID: ${{ secrets.FABRIC_CLIENT_ID }}
+          FABRIC_CLIENT_SECRET: ${{ secrets.FABRIC_CLIENT_SECRET }}
+          FABRIC_TENANT_ID: ${{ secrets.FABRIC_TENANT_ID }}
