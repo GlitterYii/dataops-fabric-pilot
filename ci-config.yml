@@ -23,10 +23,12 @@ pl_test_pipeline:
   fabric_type: DataPipeline
   check: structure
 
-pl_test_2:
-  fabric_type: DataPipeline
-  check: structure
-
 lh_test_lakehouse:
   fabric_type: Lakehouse
   check: schema
+
+pl_test_2:
+  fabric_type: DataPipeline
+  check: structure
+  skip_check: true
+  skip_reason: "Demo pipeline สำหรับสาธิต CI/CD flow เท่านั้น ไม่มี activity จริง"
