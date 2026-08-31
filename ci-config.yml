@@ -23,6 +23,10 @@ pl_test_pipeline:
   fabric_type: DataPipeline
   check: structure
 
+pl_test_2:
+  fabric_type: DataPipeline
+  check: structure
+
 lh_test_lakehouse:
   fabric_type: Lakehouse
   check: schema
