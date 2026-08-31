@@ -32,3 +32,9 @@ pl_test_2:
   check: structure
   skip_check: true
   skip_reason: "Demo pipeline สำหรับสาธิต CI/CD flow เท่านั้น ไม่มี activity จริง"
+
+pl_test_3:
+  fabric_type: DataPipeline
+  check: structure
+  skip_check: true
+  skip_reason: "Demo pipeline สำหรับสาธิต CI/CD flow เท่านั้น ไม่มี activity จริง"
