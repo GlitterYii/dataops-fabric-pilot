@@ -5,10 +5,6 @@ on:
     branches: [ 'dev', 'main', 'feature/**' ]
   pull_request:
     branches: [ 'staging', 'main' ]
-  workflow_dispatch:   # ปุ่ม "Run workflow" ใน Actions tab — กดเองตอนพร้อม deploy prod จริง
-                        # ตั้งใจแยกจาก push-to-main เพราะ approval prompt ของ push-triggered run
-                        # หาไม่เจอง่ายๆ ใน UI (ไม่โผล่ใน PR ที่ merge แล้ว ต้องไปงมใน Actions)
-                        # ปุ่มนี้อยู่ตำแหน่งเดิมเสมอบนหน้า Actions ของ workflow นี้
 
 jobs:
   test:
@@ -222,9 +218,7 @@ jobs:
 
   deploy-prod:
     needs: test
-    # Manual only — ต้องกด "Run workflow" เอง (ไม่ auto-trigger ตอน push เข้า main แล้ว)
-    # กด dropdown ตอน Run workflow เลือก branch = main เสมอ ไม่งั้นจะ deploy โค้ดผิด branch
-    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     environment: production   # ต้องไปสร้าง environment ชื่อ "production" ใน Settings → Environments
                                # แล้วเพิ่ม Required reviewers ก่อน ไม่งั้น deploy จะรันทันทีไม่มีใครเช็คก่อน
