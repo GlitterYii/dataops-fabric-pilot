@@ -5,10 +5,6 @@ on:
     branches: [ 'dev', 'main', 'feature/**' ]
   pull_request:
     branches: [ 'staging', 'main' ]
-  workflow_dispatch:   # ปุ่ม "Run workflow" ใน Actions tab — กดเองตอนพร้อม deploy prod จริง
-                        # ตั้งใจแยกจาก push-to-main เพราะ approval prompt ของ push-triggered run
-                        # หาไม่เจอง่ายๆ ใน UI (ไม่โผล่ใน PR ที่ merge แล้ว ต้องไปงมใน Actions)
-                        # ปุ่มนี้อยู่ตำแหน่งเดิมเสมอบนหน้า Actions ของ workflow นี้
 
 jobs:
   test:
@@ -31,6 +27,7 @@ jobs:
           for item in fabric_items/*/; do
             folder=$(basename "$item")
             name="${folder%.*}"
+            fabric_type=$(yq ".${name}.fabric_type // \"${folder##*.}\"" ci-config.yml)
 
             # opt-out รายตัว ใช้ได้กับทุก pattern — ต้องระบุเหตุผลเสมอ ไม่ปล่อยผ่านแบบเงียบๆ
             skip=$(yq ".${name}.skip_check // false" ci-config.yml)
@@ -45,7 +42,13 @@ jobs:
               continue
             fi
 
-            check=$(yq ".${name}.check // \"unit_test\"" ci-config.yml)
+            # ลำดับ: override เฉพาะ item -> default ตาม fabric_type ใน _defaults -> unit_test (fail-safe เข้มสุด)
+            # แยกเป็น 2 คำสั่ง yq ต่อกัน (ไม่ใช้ // สองอันในคำสั่งเดียว) เพราะ // เดี่ยวๆ พิสูจน์แล้วว่าใช้ได้จริงใน CI
+            # ส่วน // สองชั้นต่อกันยังไม่มีตัวอย่างยืนยันจาก yq docs ว่ารองรับแน่นอน
+            check=$(yq ".${name}.check // \"\"" ci-config.yml)
+            if [ -z "$check" ]; then
+              check=$(yq "._defaults.${fabric_type} // \"unit_test\"" ci-config.yml)
+            fi
 
             case "$check" in
               unit_test)
@@ -112,7 +115,11 @@ jobs:
             name="${folder%.*}"
 
             fabric_type=$(yq ".${name}.fabric_type // \"${folder##*.}\"" ci-config.yml)
-            check=$(yq ".${name}.check // \"unit_test\"" ci-config.yml)
+            # ลำดับเดียวกับ step "Run checks based on declared pattern" ด้านบน — ต้องตรงกันเสมอ
+            check=$(yq ".${name}.check // \"\"" ci-config.yml)
+            if [ -z "$check" ]; then
+              check=$(yq "._defaults.${fabric_type} // \"unit_test\"" ci-config.yml)
+            fi
             skip=$(yq ".${name}.skip_check // false" ci-config.yml)
 
             if [ "$skip" = "true" ]; then
@@ -222,9 +229,7 @@ jobs:
 
   deploy-prod:
     needs: test
-    # Manual only — ต้องกด "Run workflow" เอง (ไม่ auto-trigger ตอน push เข้า main แล้ว)
-    # กด dropdown ตอน Run workflow เลือก branch = main เสมอ ไม่งั้นจะ deploy โค้ดผิด branch
-    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     environment: production   # ต้องไปสร้าง environment ชื่อ "production" ใน Settings → Environments
                                # แล้วเพิ่ม Required reviewers ก่อน ไม่งั้น deploy จะรันทันทีไม่มีใครเช็คก่อน
