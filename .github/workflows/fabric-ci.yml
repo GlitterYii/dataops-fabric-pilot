@@ -9,6 +9,9 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write   # ต้องมีสิทธิ์นี้ถึงจะ comment ตาราง summary ลง PR ได้
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -95,9 +98,10 @@ jobs:
       - name: Generate check summary table
         if: always()
         run: |
-          echo "## Fabric Item Check Summary" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Item | Fabric Type | Check Pattern | Status |" >> "$GITHUB_STEP_SUMMARY"
-          echo "|---|---|---|---|" >> "$GITHUB_STEP_SUMMARY"
+          pass_count=0
+          fail_count=0
+          skip_count=0
+          rows=""
 
           for item in fabric_items/*/; do
             folder=$(basename "$item")
@@ -108,32 +112,102 @@ jobs:
             skip=$(yq ".${name}.skip_check // false" ci-config.yml)
 
             if [ "$skip" = "true" ]; then
-              status="⏭️ skipped (see skip_reason)"
+              reason=$(yq ".${name}.skip_reason // \"\"" ci-config.yml)
+              status="⏭️ **Skipped** — $reason"
+              skip_count=$((skip_count + 1))
             else
               case "$check" in
                 unit_test)
-                  [ -f "tests/unit/test_${name}.py" ] && status="✅" || status="❌ missing"
+                  if [ -f "tests/unit/test_${name}.py" ]; then
+                    status="✅ **Pass**"; pass_count=$((pass_count + 1))
+                  else
+                    status="❌ **Missing test**"; fail_count=$((fail_count + 1))
+                  fi
                   ;;
                 data_quality)
-                  [ -f "great_expectations/checkpoints/dq_${name}.yml" ] && status="✅" || status="❌ missing"
+                  if [ -f "great_expectations/checkpoints/dq_${name}.yml" ]; then
+                    status="✅ **Pass**"; pass_count=$((pass_count + 1))
+                  else
+                    status="❌ **Missing checkpoint**"; fail_count=$((fail_count + 1))
+                  fi
                   ;;
                 structure)
-                  [ -f "scripts/validate_pipeline_structure.py" ] && status="✅" || status="❌ missing"
+                  if [ -f "scripts/validate_pipeline_structure.py" ]; then
+                    status="✅ **Pass**"; pass_count=$((pass_count + 1))
+                  else
+                    status="❌ **Missing script**"; fail_count=$((fail_count + 1))
+                  fi
                   ;;
                 schema)
-                  [ -f "scripts/validate_schema_contract.py" ] && status="✅" || status="❌ missing"
+                  if [ -f "scripts/validate_schema_contract.py" ]; then
+                    status="✅ **Pass**"; pass_count=$((pass_count + 1))
+                  else
+                    status="❌ **Missing script**"; fail_count=$((fail_count + 1))
+                  fi
                   ;;
                 none)
-                  status="⏭️ skipped (intentional)"
+                  status="⏭️ **Skipped** — no check declared (intentional)"
+                  skip_count=$((skip_count + 1))
                   ;;
                 *)
-                  status="⚠️ unknown pattern"
+                  status="⚠️ **Unknown pattern**"
+                  fail_count=$((fail_count + 1))
                   ;;
               esac
             fi
 
-            echo "| $name | $fabric_type | $check | $status |" >> "$GITHUB_STEP_SUMMARY"
+            rows="${rows}| \`$name\` | $fabric_type | \`$check\` | $status |"$'\n'
           done
+
+          {
+            echo "## 🔍 Fabric Item Check Summary"
+            echo ""
+            if [ "$fail_count" -gt 0 ]; then
+              echo "### ❌ $fail_count check(s) need attention before merge"
+            else
+              echo "### ✅ All checks passing — $pass_count passed, $skip_count skipped"
+            fi
+            echo ""
+            echo "| Item | Fabric Type | Check Pattern | Status |"
+            echo "|---|---|---|---|"
+            printf '%s' "$rows"
+            echo ""
+            echo "<sub>Commit \`${GITHUB_SHA::7}\` · [View full run](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID})</sub>"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Post check summary as PR comment
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const summary = fs.readFileSync(process.env.GITHUB_STEP_SUMMARY, 'utf8');
+            const marker = '<!-- fabric-item-check-summary -->';
+            const body = `${marker}\n${summary}`;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const existing = comments.find(c => c.body.includes(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
 
   deploy-prod:
     needs: test
