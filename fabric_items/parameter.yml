@@ -1,0 +1,22 @@
+# fabric-cicd parameter file — remap environment-specific GUIDs ที่ฝังอยู่ในไฟล์ item ตอน deploy
+# อ้างอิง: https://microsoft.github.io/fabric-cicd/latest/config_files/parameter/
+#
+# ปัญหาที่แก้: Notebook ที่ attach Lakehouse ผ่าน Fabric UI จะฝัง lakehouse id + workspace id
+# ของ environment ที่สร้างตอนนั้น (เช่น Dev) ไว้ใน METADATA ของตัวเอง
+# ถ้าไม่ remap ตอน deploy ข้าม environment มันจะยังชี้กลับไปที่ lakehouse ของ Dev อยู่
+# (รันผ่านไม่ error แต่ table ไปโผล่ผิดที่ หรือหาตารางใน environment ปลายทางไม่เจอ)
+#
+# วิธีแก้: ใช้ $items.<type>.<name>.$id ให้ fabric-cicd หา Lakehouse ชื่อเดียวกัน
+# ใน target workspace ของ environment ที่กำลัง deploy อยู่ ณ ตอนนั้นเอง — ไม่ต้อง hardcode
+# GUID ของ staging/prod ล่วงหน้า
+
+find_replace:
+  # default_lakehouse + known_lakehouses.id (lakehouse artifact id ของ Dev)
+  - find_value: "a7654c8c-f870-4bb7-8a88-fe3866b9c2a9"
+    replace_value: "$items.Lakehouse.lh_test_lakehouse.$id"
+    item_type: "Notebook"
+
+  # default_lakehouse_workspace_id (workspace id ของ Dev)
+  - find_value: "7a829f6b-4fd1-45c7-8c8e-b7c317816e4b"
+    replace_value: "$workspace.$id"
+    item_type: "Notebook"
