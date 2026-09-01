@@ -19,10 +19,6 @@ nb_sales_transform:
   fabric_type: Notebook
   check: unit_test
 
-nb_test_source_and_destination:
-  fabric_type: Notebook
-  check: unit_test
-
 pl_test_pipeline:
   fabric_type: DataPipeline
   check: structure
@@ -40,6 +36,5 @@ pl_test_2:
 pl_test_source_and_destination:
   fabric_type: DataPipeline
   check: structure
-  # smoke test: เรียก nb_test_source_and_destination (Notebook Activity) แทน Copy Activity
-  # เพราะ Copy Activity ต้องพึ่ง external Connection ที่ Service Principal deploy ไม่มีสิทธิ์เข้าถึง
-  # Notebook Activity อ่าน/เขียนผ่าน Spark ภายใน workspace เดียวกัน ไม่ต้องพึ่ง Connection เลย
+  # smoke test: Copy Activity จาก ci_test_source -> ci_test_destination ใน lh_test_lakehouse
+  # ใช้ยืนยันว่า connection ระหว่าง source/destination ยังใช้งานได้จริงหลัง deploy ข้าม environment

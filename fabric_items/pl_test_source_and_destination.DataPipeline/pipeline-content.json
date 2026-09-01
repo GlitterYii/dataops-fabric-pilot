@@ -2,13 +2,78 @@
   "properties": {
     "activities": [
       {
-        "type": "TridentNotebook",
+        "type": "Copy",
         "typeProperties": {
-          "notebookId": "4637a05f-e2da-42a2-9e43-e1af2611f217",
-          "workspaceId": "00000000-0000-0000-0000-000000000000"
+          "source": {
+            "type": "LakehouseTableSource",
+            "datasetSettings": {
+              "type": "LakehouseTable",
+              "typeProperties": {
+                "schema": "dbo",
+                "table": "sales_raw"
+              },
+              "schema": [],
+              "connectionSettings": {
+                "name": "lh_test_lakehouse",
+                "properties": {
+                  "type": "Lakehouse",
+                  "typeProperties": {
+                    "artifactId": "66b9c2a9-fe38-8a88-4bb7-f870a7654c8c",
+                    "workspaceId": "00000000-0000-0000-0000-000000000000",
+                    "rootFolder": "Tables"
+                  },
+                  "externalReferences": {
+                    "connection": "8925f31f-cee4-49ca-bff6-4688e6d70677"
+                  },
+                  "annotations": []
+                }
+              },
+              "annotations": []
+            }
+          },
+          "sink": {
+            "type": "LakehouseTableSink",
+            "tableActionOption": "OverwriteSchema",
+            "applyVOrder": false,
+            "enableTimestampNtz": false,
+            "partitionOption": "None",
+            "datasetSettings": {
+              "type": "LakehouseTable",
+              "typeProperties": {
+                "schema": "dbo",
+                "table": "ci_test_destination"
+              },
+              "schema": [],
+              "connectionSettings": {
+                "name": "lh_test_lakehouse",
+                "properties": {
+                  "type": "Lakehouse",
+                  "typeProperties": {
+                    "artifactId": "66b9c2a9-fe38-8a88-4bb7-f870a7654c8c",
+                    "workspaceId": "00000000-0000-0000-0000-000000000000",
+                    "rootFolder": "Tables"
+                  },
+                  "externalReferences": {
+                    "connection": "8925f31f-cee4-49ca-bff6-4688e6d70677"
+                  },
+                  "annotations": []
+                }
+              },
+              "annotations": []
+            }
+          },
+          "translator": {
+            "type": "TabularTranslator",
+            "typeConversion": true,
+            "typeConversionSettings": {
+              "allowDataTruncation": true,
+              "treatBooleanAsNumber": false
+            }
+          },
+          "enableStaging": false
         },
         "policy": {
-          "timeout": "0.00:10:00",
+          "timeout": "00:10:00",
           "retry": 0,
           "retryIntervalInSeconds": 30,
           "secureInput": false,
