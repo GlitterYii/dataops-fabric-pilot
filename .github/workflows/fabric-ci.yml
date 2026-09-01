@@ -173,7 +173,12 @@ jobs:
             printf '%s' "$rows"
             echo ""
             echo "<sub>Commit \`${GITHUB_SHA::7}\` · [View full run](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID})</sub>"
-          } >> "$GITHUB_STEP_SUMMARY"
+          } > "$RUNNER_TEMP/check_summary.md"
+
+          # $GITHUB_STEP_SUMMARY เป็นไฟล์แยกกันคนละไฟล์ในแต่ละ step (GitHub รวมให้ทีหลังตอนแสดง Job Summary)
+          # step อื่นที่มาอ่านทีหลัง (เช่น step post-comment) จะอ่านจาก $GITHUB_STEP_SUMMARY ไม่ได้เพราะเป็นไฟล์คนละอันกับตอนเขียน
+          # เก็บสำเนาไว้ที่ $RUNNER_TEMP ด้วย เพื่อให้ step ถัดไปอ่านเนื้อหาเดิมที่ตรงกันได้จริง
+          cat "$RUNNER_TEMP/check_summary.md" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Post check summary as PR comment
         if: always() && github.event_name == 'pull_request'
@@ -181,7 +186,9 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            const summary = fs.readFileSync(process.env.GITHUB_STEP_SUMMARY, 'utf8');
+            const path = require('path');
+            const summaryPath = path.join(process.env.RUNNER_TEMP, 'check_summary.md');
+            const summary = fs.readFileSync(summaryPath, 'utf8');
             const marker = '<!-- fabric-item-check-summary -->';
             const body = `${marker}\n${summary}`;
 

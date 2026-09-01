@@ -33,8 +33,8 @@ pl_test_2:
   skip_check: true
   skip_reason: "Demo pipeline สำหรับสาธิต CI/CD flow เท่านั้น ไม่มี activity จริง"
 
-pl_test_3:
+pl_test_source_and_destination:
   fabric_type: DataPipeline
   check: structure
-  skip_check: true
-  skip_reason: "Demo pipeline สำหรับสาธิต CI/CD flow เท่านั้น ไม่มี activity จริง"
+  # smoke test: Copy Activity จาก ci_test_source -> ci_test_destination ใน lh_test_lakehouse
+  # ใช้ยืนยันว่า connection ระหว่าง source/destination ยังใช้งานได้จริงหลัง deploy ข้าม environment
