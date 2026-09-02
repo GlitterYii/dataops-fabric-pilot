@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Notebook",
+    "displayName": "nb_mcp_test",
+    "description": "Test item created via Fabric MCP to verify write access and test generate_ci_config.py"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "50c712fd-be89-b0bf-45ae-8c199952a663"
+  }
+}
