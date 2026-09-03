@@ -26,3 +26,9 @@ find_replace:
     replace_value:
       _ALL_: "$workspace.$id"
     item_type: "Notebook"
+
+# --- เพิ่มโดย generate_parameter.py ---
+  - find_value: 66b9c2a9-fe38-8a88-4bb7-f870a7654c8c
+    replace_value:
+      _ALL_: $items.Lakehouse.lh_test_lakehouse.$id
+    item_type: DataPipeline
