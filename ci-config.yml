@@ -23,13 +23,27 @@ _defaults:
   Notebook: unit_test
   DataPipeline: structure
   Lakehouse: schema
-
 # --- Override เฉพาะ item ที่ต้องการ pattern ต่างจาก default ของ type, หรือ skip_check ---
 
 pl_test_2:
   skip_check: true
   skip_reason: "Demo pipeline สำหรับสาธิต CI/CD flow เท่านั้น ไม่มี activity จริง"
 
-# pl_test_pipeline, lh_test_lakehouse, nb_test_connection, nb_sales_transform,
+nb_test_connection:
+  check: none
+  # ไม่มี business logic ให้ unit test จริง (แค่ import + comment ทดสอบ connection)
+  # test เดิม (test_nb_test_connection.py) เป็นแค่ placeholder "assert True" ที่ไม่เช็คอะไรจริง — ลบทิ้งแล้ว
+  # ใช้ check: none แทน unit_test เพื่อไม่ให้ CI "Pass" แบบหลอกๆ ว่ามีการเช็คทั้งที่ไม่มี
+
+# pl_test_pipeline, lh_test_lakehouse, nb_sales_transform,
 # nb_test_source_and_destination, pl_test_source_and_destination
 # ไม่ต้องมี entry เลย — ใช้ default ตาม fabric_type ของตัวเองจาก _defaults ด้านบนได้ตรงอยู่แล้ว
+
+nb_mcp_test:
+  skip_check: true
+  skip_reason: Bulk onboarding 2026-09-02 — ยังไม่มี unit test ให้ item นี้ ต้องเขียนเพิ่มแล้วเอา skip_check ออก
+# --- เพิ่มโดย generate_ci_config.py (2026-09-03) ---
+nb_draft-rollback_helper:
+  skip_check: true
+  skip_reason: Bulk onboarding 2026-09-03 — ยังไม่มี unit test ให้ item นี้ ต้องเขียนเพิ่มแล้วเอา
+    skip_check ออก
