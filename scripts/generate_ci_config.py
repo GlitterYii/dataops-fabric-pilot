@@ -73,26 +73,36 @@ def has_dq_checkpoint(name):
 
 
 def decide_entry(name, fabric_type, defaults, existing_entry, today_str):
-    """คืนค่า (entry_dict_or_None, note) — None แปลว่าไม่ต้องเขียน entry (ใช้ default ได้เลย)"""
+    """
+    คืนค่า (entry_dict_or_None, resolved_check, source)
+    - entry_dict_or_None: None แปลว่าไม่ต้องเขียน entry ใหม่ (ใช้ default ได้เลย หรือมี entry เดิมอยู่แล้ว)
+    - resolved_check: check pattern ที่ item นี้จะได้ใช้จริง (โชว์ให้เห็นเสมอ ไม่ว่าจะมาจากไหน)
+    - source: อธิบายว่า pattern นี้มาจากไหน (สำหรับ print ตาราง ให้เห็นครบทุกตัว ไม่ใช่แค่ตัวที่เพิ่งเพิ่ม)
+    """
 
     if existing_entry is not None:
-        return None, "already in ci-config.yml — skipped (not overwritten)"
+        existing_check = existing_entry.get("check") if isinstance(existing_entry, dict) else None
+        if existing_entry.get("skip_check"):
+            resolved = existing_check or defaults.get(fabric_type, "unit_test")
+            return None, resolved, "existing entry (skip_check — already marked, not touched)"
+        resolved = existing_check or defaults.get(fabric_type, "unit_test")
+        return None, resolved, "existing entry in ci-config.yml (explicit override, not touched)"
 
     default_check = defaults.get(fabric_type)
 
     if default_check is None:
         # ไม่มี default ให้ type นี้เลย -> fallback ปกติคือ unit_test (fail-safe เข้มสุด)
-        default_check = "unit_test"
+        return None, "unit_test", f"no _defaults entry for type '{fabric_type}' — fell back to unit_test"
 
     if default_check not in PATTERNS_NEEDING_EVIDENCE:
         # structure / schema / none -> ใช้ script กลาง ไม่ต้องมีไฟล์ต่อ item เลย
-        return None, f"uses shared script for '{default_check}' — no entry needed"
+        return None, default_check, f"_defaults.{fabric_type} = {default_check} (shared script, no file needed)"
 
     if default_check == "unit_test" and has_unit_test(name):
-        return None, "unit test file already exists — default applies cleanly"
+        return None, "unit_test", f"_defaults.{fabric_type} = unit_test (test file exists)"
 
     if default_check == "data_quality" and has_dq_checkpoint(name):
-        return None, "data quality checkpoint already exists — default applies cleanly"
+        return None, "data_quality", f"_defaults.{fabric_type} = data_quality (checkpoint exists)"
 
     # ไม่มี evidence รองรับ default ที่ต้องมีไฟล์เฉพาะ -> skip ไว้ก่อน ไม่ให้ CI พังทันที
     entry = {
@@ -103,7 +113,7 @@ def decide_entry(name, fabric_type, defaults, existing_entry, today_str):
             f"ให้ item นี้ ต้องเขียนเพิ่มแล้วเอา skip_check ออก"
         ),
     }
-    return entry, f"no evidence for '{default_check}' — marked skip_check (needs follow-up)"
+    return entry, default_check, f"NEW skip_check — no {default_check} evidence found yet (ต้องเขียนเพิ่ม)"
 
 
 def main():
@@ -116,37 +126,44 @@ def main():
     today_str = date.today().isoformat()
 
     items = list_fabric_items()
-    added, skipped_existing, using_default = [], [], []
+    added = []
+    table_rows = []  # (name, fabric_type, resolved_check, source) — ทุก item ไม่ว่าจะเปลี่ยนหรือไม่
 
     for name, fabric_type in items:
         existing_entry = config.get(name)
-        entry, note = decide_entry(name, fabric_type, defaults, existing_entry, today_str)
+        entry, resolved_check, source = decide_entry(name, fabric_type, defaults, existing_entry, today_str)
 
         if entry is not None:
             config[name] = entry
-            added.append((name, fabric_type, note))
-        elif existing_entry is not None:
-            skipped_existing.append((name, fabric_type, note))
-        else:
-            using_default.append((name, fabric_type, note))
+            added.append((name, fabric_type, resolved_check, source))
 
-    print(f"พบ item ทั้งหมด: {len(items)}")
-    print(f"  - ใช้ _defaults ได้เลย (ไม่ต้องเขียน entry): {len(using_default)}")
-    print(f"  - มี entry อยู่แล้ว ไม่แตะ: {len(skipped_existing)}")
-    print(f"  - เพิ่ม entry ใหม่ (ส่วนใหญ่เป็น skip_check รอเติม test): {len(added)}")
+        table_rows.append((name, fabric_type, resolved_check, source))
+
+    # ตารางเต็ม — เห็นทุก item ว่าได้ pattern อะไร มาจากไหน ไม่ใช่แค่ตัวที่เพิ่งเพิ่ม
+    name_w = max(len(r[0]) for r in table_rows) + 2
+    type_w = max(len(r[1]) for r in table_rows) + 2
+    check_w = max(len(r[2]) for r in table_rows) + 2
+
+    print("=== ตารางเต็ม: ทุก item ได้ check pattern อะไร มาจากไหน ===")
+    print(f"{'ITEM'.ljust(name_w)}{'TYPE'.ljust(type_w)}{'CHECK'.ljust(check_w)}SOURCE")
+    for name, fabric_type, resolved_check, source in table_rows:
+        print(f"{name.ljust(name_w)}{fabric_type.ljust(type_w)}{resolved_check.ljust(check_w)}{source}")
+    print()
+
+    print(f"พบ item ทั้งหมด: {len(items)}  |  เพิ่ม entry ใหม่: {len(added)}")
     print()
 
     if added:
-        print("=== Entry ใหม่ที่เพิ่ม (ต้องตามไปเขียน test จริงทีหลัง) ===")
-        for name, fabric_type, note in added:
-            print(f"  [{fabric_type}] {name}: {note}")
+        print("⚠️  ตัวที่เพิ่ง auto-skip (ต้องตามไปเขียน test จริงแล้วเอา skip_check ออกทีหลัง):")
+        for name, fabric_type, resolved_check, source in added:
+            print(f"  [{fabric_type}] {name} -> {resolved_check}")
         print()
 
     if not added:
         print("ไม่มี entry ใหม่ต้องเพิ่ม — ไม่แตะไฟล์เลย (กัน comment ในไฟล์เดิมหาย)")
         return
 
-    new_entries = {name: entry for name, _fabric_type, _note in added for entry in [config[name]]}
+    new_entries = {name: config[name] for name, _fabric_type, _resolved_check, _source in added}
     appended_yaml = yaml.dump(new_entries, allow_unicode=True, sort_keys=False, default_flow_style=False)
 
     if args.dry_run:
