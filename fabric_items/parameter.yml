@@ -9,14 +9,26 @@
 # วิธีแก้: ใช้ $items.<type>.<name>.$id ให้ fabric-cicd หา Lakehouse ชื่อเดียวกัน
 # ใน target workspace ของ environment ที่กำลัง deploy อยู่ ณ ตอนนั้นเอง — ไม่ต้อง hardcode
 # GUID ของ staging/prod ล่วงหน้า
+#
+# replace_value ต้องเป็น dictionary เสมอ (fabric-cicd บังคับ) — ใช้ key พิเศษ "_ALL_"
+# เพื่อให้ apply กับทุก environment เหมือนกันหมด (ต้องเป็น key เดียวในนั้นเท่านั้น
+# ถ้ามี env key อื่นปนอยู่ด้วย fabric-cicd จะ validation fail)
 
 find_replace:
   # default_lakehouse + known_lakehouses.id (lakehouse artifact id ของ Dev)
   - find_value: "a7654c8c-f870-4bb7-8a88-fe3866b9c2a9"
-    replace_value: "$items.Lakehouse.lh_test_lakehouse.$id"
+    replace_value:
+      _ALL_: "$items.Lakehouse.lh_test_lakehouse.$id"
     item_type: "Notebook"
 
   # default_lakehouse_workspace_id (workspace id ของ Dev)
   - find_value: "7a829f6b-4fd1-45c7-8c8e-b7c317816e4b"
-    replace_value: "$workspace.$id"
+    replace_value:
+      _ALL_: "$workspace.$id"
     item_type: "Notebook"
+
+# --- เพิ่มโดย generate_parameter.py ---
+  - find_value: 66b9c2a9-fe38-8a88-4bb7-f870a7654c8c
+    replace_value:
+      _ALL_: $items.Lakehouse.lh_test_lakehouse.$id
+    item_type: DataPipeline

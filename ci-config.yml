@@ -1,7 +1,14 @@
 # กำหนดว่า item แต่ละตัว "ต้องเช็คแบบไหน" (check pattern) ไม่ใช่ผูกกับ Fabric item type ตรงๆ
 # check ที่รองรับตอนนี้: unit_test | data_quality | structure | schema | none
 #
-# ถ้า item ไหนไม่ถูกระบุในไฟล์นี้เลย ให้ default เป็น check: unit_test เสมอ (fail-safe เข้มสุด)
+# ลำดับการหา check pattern ของแต่ละ item (จากเจาะจงสุด -> กว้างสุด):
+#   1. entry เฉพาะ item นั้น (ระบุ check ตรงๆ)              <- override เฉพาะตัว
+#   2. _defaults.<fabric_type> ของ item นั้น (ดูจาก .Notebook / .DataPipeline / ... ท้ายชื่อ folder) <- ค่า default ตาม type
+#   3. unit_test (fail-safe เข้มสุด ถ้าไม่มีทั้ง 1 และ 2)
+#
+# ข้อดี: item ที่ pattern ตรงกับ default ของ type ตัวเองอยู่แล้ว "ไม่ต้องเขียน entry เลย"
+# เขียน entry เฉพาะตอนที่ต้องการ check pattern ต่างจาก default ของ type, หรือ skip_check เท่านั้น
+# ทำให้ไม่ต้องมานั่งเขียน entry ซ้ำๆ ทุกตัวเวลามี item เพิ่มเยอะ
 #
 # Opt-out รายตัว (ใช้ได้กับทุก pattern รวม structure/schema):
 #   skip_check: true
@@ -9,32 +16,34 @@
 # ต่างจาก check: none ตรงที่ยังคง label ว่า item นี้ "ควรจะ" เช็คแบบไหนไว้ (เผื่อกลับมาเปิดทีหลัง)
 #
 # ข้อดี: Fabric ออก item type ใหม่กี่ตัวก็ตาม (Eventstream, KQL Database, Reflex, ...)
-# แค่เพิ่ม entry ที่นี่แล้วแม็ปไปยัง check pattern ที่มีอยู่แล้ว ไม่ต้องแก้ fabric-ci.yml เลย
+# แค่เพิ่ม default ที่นี่ (หรือ entry เฉพาะตัวถ้าจำเป็น) แล้วแม็ปไปยัง check pattern ที่มีอยู่แล้ว
+# ไม่ต้องแก้ fabric-ci.yml เลย
 
-nb_test_connection:
-  fabric_type: Notebook
-  check: unit_test
-
-nb_sales_transform:
-  fabric_type: Notebook
-  check: unit_test
-
-pl_test_pipeline:
-  fabric_type: DataPipeline
-  check: structure
-
-lh_test_lakehouse:
-  fabric_type: Lakehouse
-  check: schema
+_defaults:
+  Notebook: unit_test
+  DataPipeline: structure
+  Lakehouse: schema
+# --- Override เฉพาะ item ที่ต้องการ pattern ต่างจาก default ของ type, หรือ skip_check ---
 
 pl_test_2:
-  fabric_type: DataPipeline
-  check: structure
   skip_check: true
   skip_reason: "Demo pipeline สำหรับสาธิต CI/CD flow เท่านั้น ไม่มี activity จริง"
 
-pl_test_source_and_destination:
-  fabric_type: DataPipeline
-  check: structure
-  # smoke test: Copy Activity จาก ci_test_source -> ci_test_destination ใน lh_test_lakehouse
-  # ใช้ยืนยันว่า connection ระหว่าง source/destination ยังใช้งานได้จริงหลัง deploy ข้าม environment
+nb_test_connection:
+  check: none
+  # ไม่มี business logic ให้ unit test จริง (แค่ import + comment ทดสอบ connection)
+  # test เดิม (test_nb_test_connection.py) เป็นแค่ placeholder "assert True" ที่ไม่เช็คอะไรจริง — ลบทิ้งแล้ว
+  # ใช้ check: none แทน unit_test เพื่อไม่ให้ CI "Pass" แบบหลอกๆ ว่ามีการเช็คทั้งที่ไม่มี
+
+# pl_test_pipeline, lh_test_lakehouse, nb_sales_transform,
+# nb_test_source_and_destination, pl_test_source_and_destination
+# ไม่ต้องมี entry เลย — ใช้ default ตาม fabric_type ของตัวเองจาก _defaults ด้านบนได้ตรงอยู่แล้ว
+
+nb_mcp_test:
+  skip_check: true
+  skip_reason: Bulk onboarding 2026-09-02 — ยังไม่มี unit test ให้ item นี้ ต้องเขียนเพิ่มแล้วเอา skip_check ออก
+# --- เพิ่มโดย generate_ci_config.py (2026-09-03) ---
+nb_draft-rollback_helper:
+  skip_check: true
+  skip_reason: Bulk onboarding 2026-09-03 — ยังไม่มี unit test ให้ item นี้ ต้องเขียนเพิ่มแล้วเอา
+    skip_check ออก

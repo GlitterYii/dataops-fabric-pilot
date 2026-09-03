@@ -27,6 +27,7 @@ jobs:
           for item in fabric_items/*/; do
             folder=$(basename "$item")
             name="${folder%.*}"
+            fabric_type=$(yq ".${name}.fabric_type // \"${folder##*.}\"" ci-config.yml)
 
             # opt-out รายตัว ใช้ได้กับทุก pattern — ต้องระบุเหตุผลเสมอ ไม่ปล่อยผ่านแบบเงียบๆ
             skip=$(yq ".${name}.skip_check // false" ci-config.yml)
@@ -41,7 +42,13 @@ jobs:
               continue
             fi
 
-            check=$(yq ".${name}.check // \"unit_test\"" ci-config.yml)
+            # ลำดับ: override เฉพาะ item -> default ตาม fabric_type ใน _defaults -> unit_test (fail-safe เข้มสุด)
+            # แยกเป็น 2 คำสั่ง yq ต่อกัน (ไม่ใช้ // สองอันในคำสั่งเดียว) เพราะ // เดี่ยวๆ พิสูจน์แล้วว่าใช้ได้จริงใน CI
+            # ส่วน // สองชั้นต่อกันยังไม่มีตัวอย่างยืนยันจาก yq docs ว่ารองรับแน่นอน
+            check=$(yq ".${name}.check // \"\"" ci-config.yml)
+            if [ -z "$check" ]; then
+              check=$(yq "._defaults.${fabric_type} // \"unit_test\"" ci-config.yml)
+            fi
 
             case "$check" in
               unit_test)
@@ -108,7 +115,11 @@ jobs:
             name="${folder%.*}"
 
             fabric_type=$(yq ".${name}.fabric_type // \"${folder##*.}\"" ci-config.yml)
-            check=$(yq ".${name}.check // \"unit_test\"" ci-config.yml)
+            # ลำดับเดียวกับ step "Run checks based on declared pattern" ด้านบน — ต้องตรงกันเสมอ
+            check=$(yq ".${name}.check // \"\"" ci-config.yml)
+            if [ -z "$check" ]; then
+              check=$(yq "._defaults.${fabric_type} // \"unit_test\"" ci-config.yml)
+            fi
             skip=$(yq ".${name}.skip_check // false" ci-config.yml)
 
             if [ "$skip" = "true" ]; then

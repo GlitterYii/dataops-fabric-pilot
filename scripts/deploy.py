@@ -1,7 +1,7 @@
 import os
 import shutil
 import argparse
-from fabric_cicd import FabricWorkspace, publish_all_items
+from fabric_cicd import FabricWorkspace, publish_all_items, unpublish_all_orphan_items
 from azure.identity import ClientSecretCredential
 
 # หา path ของ fabric_items แบบ absolute อ้างอิงจากตำแหน่งไฟล์นี้เอง (อยู่ใน scripts/ ต้องขึ้นไป 1 ชั้น)
@@ -41,3 +41,10 @@ workspace = FabricWorkspace(
 )
 
 publish_all_items(workspace)
+
+# ลบ item ที่ถูกลบออกจาก fabric_items/ แล้วออกจาก workspace ปลายทางด้วย (ไม่งั้นค้างอยู่ตลอด)
+# Default = soft delete (เข้า recycle bin ของ workspace) ไม่ใช่ลบถาวร
+# Lakehouse/Warehouse/SQL Database จะไม่ถูกลบโดย default (ต้องเปิด feature flag
+# enable_lakehouse_unpublish / enable_warehouse_unpublish / enable_sqldatabase_unpublish
+# เองถึงจะลบได้ — ตั้งใจไม่เปิดตรงนี้ เพราะ item พวกนี้มีข้อมูลจริงอยู่ข้างใน)
+unpublish_all_orphan_items(workspace)
