@@ -2,24 +2,6 @@
   "properties": {
     "activities": [
       {
-        "type": "TridentNotebook",
-        "typeProperties": {
-          "notebookId": "6faca74b-77d9-457e-a36f-fb50584e2045",
-          "workspaceId": "7a829f6b-4fd1-45c7-8c8e-b7c317816e4b"
-        },
-        "policy": {
-          "timeout": "0.12:00:00",
-          "retry": 0,
-          "retryIntervalInSeconds": 30,
-          "secureInput": false,
-          "secureOutput": false
-        },
-        "name": "CopySourceToDestination",
-        "state": "Inactive",
-        "onInactiveMarkAs": "Succeeded",
-        "dependsOn": []
-      },
-      {
         "type": "Copy",
         "typeProperties": {
           "source": {
