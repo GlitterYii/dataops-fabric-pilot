@@ -2,61 +2,39 @@
   "properties": {
     "activities": [
       {
-        "type": "TridentNotebook",
-        "typeProperties": {
-          "notebookId": "584e2045-fb50-a36f-457e-77d96faca74b",
-          "workspaceId": "00000000-0000-0000-0000-000000000000"
-        },
-        "policy": {
-          "timeout": "0.12:00:00",
-          "retry": 0,
-          "retryIntervalInSeconds": 30,
-          "secureInput": false,
-          "secureOutput": false
-        },
-        "name": "CopySourceToDestination",
-        "dependsOn": []
-      },
-      {
         "type": "Copy",
         "typeProperties": {
           "source": {
-            "type": "LakehouseTableSource",
+            "type": "RestSource",
+            "requestMethod": "GET",
+            "paginationRules": {
+              "supportRFC5988": "true"
+            },
+            "httpRequestTimeout": "00:01:40",
+            "requestInterval": "00.00:00:00.010",
             "datasetSettings": {
-              "type": "LakehouseTable",
+              "type": "RestResource",
               "typeProperties": {
-                "schema": "dbo",
-                "table": "ci_test_source"
+                "relativeUrl": "/posts"
               },
               "schema": [],
-              "connectionSettings": {
-                "name": "lh_test_lakehouse",
-                "properties": {
-                  "type": "Lakehouse",
-                  "typeProperties": {
-                    "artifactId": "66b9c2a9-fe38-8a88-4bb7-f870a7654c8c",
-                    "workspaceId": "00000000-0000-0000-0000-000000000000",
-                    "rootFolder": "Tables"
-                  },
-                  "externalReferences": {
-                    "connection": "8925f31f-cee4-49ca-bff6-4688e6d70677"
-                  },
-                  "annotations": []
-                }
+              "externalReferences": {
+                "connection": "28bf3f35-36a8-4fa7-b071-178302b6db8e"
               },
               "annotations": []
             }
           },
           "sink": {
             "type": "LakehouseTableSink",
-            "tableActionOption": "Append",
+            "tableActionOption": "OverwriteSchema",
             "applyVOrder": false,
             "enableTimestampNtz": false,
+            "partitionOption": "None",
             "datasetSettings": {
               "type": "LakehouseTable",
               "typeProperties": {
                 "schema": "dbo",
-                "table": "ci_test_destination"
+                "table": "destination_public_data"
               },
               "schema": [],
               "connectionSettings": {
@@ -83,6 +61,11 @@
             "typeConversionSettings": {
               "allowDataTruncation": true,
               "treatBooleanAsNumber": false
+            },
+            "columnFlattenSettings": {
+              "treatArrayAsString": false,
+              "treatStructAsString": false,
+              "flattenColumnDelimiter": "."
             }
           },
           "enableStaging": false
@@ -94,7 +77,7 @@
           "secureInput": false,
           "secureOutput": false
         },
-        "name": "Copy data1",
+        "name": "CopyFromPublicAPI",
         "dependsOn": []
       }
     ]
