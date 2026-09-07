@@ -66,6 +66,20 @@ def _clean_pycache(root: str) -> None:
             dirnames.remove("__pycache__")
 
 
+def _load_dotenv(path: str) -> None:
+    # เหมือน deploy.py — โหลด .env local แบบเบาๆ ไม่มีก็ข้ามเงียบๆ (deploy_local.py เองไม่ต้อง
+    # ใช้ FABRIC_* เพราะ login ผ่าน browser ตรงๆ อยู่แล้ว แต่เก็บ pattern เดียวกันไว้เผื่ออนาคต)
+    if not os.path.isfile(path):
+        return
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, _, value = line.partition("=")
+            os.environ.setdefault(key.strip(), value.strip())
+
+
 parser = argparse.ArgumentParser()
 parser.add_argument(
     "--workspace",
@@ -85,6 +99,7 @@ else:
         f"(รู้จักแค่ {list(ENVIRONMENT_WORKSPACE_IDS)}) — ใส่ --workspace <GUID> เองด้วย"
     )
 
+_load_dotenv(os.path.join(BASE_DIR, "..", ".env"))
 _clean_pycache(REPO_ITEMS_DIR)
 
 credential = InteractiveBrowserCredential()
