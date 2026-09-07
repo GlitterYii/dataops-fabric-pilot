@@ -36,7 +36,7 @@ workspace = FabricWorkspace(
     workspace_id=args.workspace,
     environment=args.environment,
     repository_directory=REPO_ITEMS_DIR,
-    item_type_in_scope=["Notebook", "DataPipeline", "Dataflow", "Lakehouse"],
+    item_type_in_scope=["Notebook", "DataPipeline", "Dataflow", "Lakehouse", "Warehouse"],
     token_credential=credential,
 )
 

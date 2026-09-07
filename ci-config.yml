@@ -23,6 +23,7 @@ _defaults:
   Notebook: unit_test
   DataPipeline: structure
   Lakehouse: schema
+  Warehouse: schema
 # --- Override เฉพาะ item ที่ต้องการ pattern ต่างจาก default ของ type, หรือ skip_check ---
 
 pl_test_2:
@@ -42,6 +43,13 @@ nb_test_connection:
 nb_mcp_test:
   skip_check: true
   skip_reason: Bulk onboarding 2026-09-02 — ยังไม่มี unit test ให้ item นี้ ต้องเขียนเพิ่มแล้วเอา skip_check ออก
+
+pl_test_sp_connection_experiment:
+  skip_check: true
+  skip_reason: >-
+    Pipeline เปล่า (ไม่มี activity) เหลือจากแผนทดลอง SP-Connection-Experiment-Plan.md
+    ที่สมมติฐานตกไปตั้งแต่ขั้นสร้าง connection (ชนบั๊ก Mashup engine ของ Fabric เอง)
+    เลยไม่ได้ทำถึงขั้นเพิ่ม Copy Activity จริง — ลบทิ้งหรือทำต่อค่อยเอา skip_check ออก
 # --- เพิ่มโดย generate_ci_config.py (2026-09-03) ---
 nb_draft-rollback_helper:
   skip_check: true
