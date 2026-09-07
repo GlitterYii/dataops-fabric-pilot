@@ -23,6 +23,7 @@ _defaults:
   Notebook: unit_test
   DataPipeline: structure
   Lakehouse: schema
+  Warehouse: schema
 # --- Override เฉพาะ item ที่ต้องการ pattern ต่างจาก default ของ type, หรือ skip_check ---
 
 pl_test_2:
