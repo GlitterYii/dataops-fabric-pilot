@@ -56,11 +56,27 @@ def _clean_pycache(root: str) -> None:
             dirnames.remove("__pycache__")
 
 
+def _load_dotenv(path: str) -> None:
+    # โหลด .env local (สำหรับรัน deploy.py ทดสอบเองนอก CI) แบบเบาๆ ไม่เพิ่ม pip dependency
+    # ใหม่ (ไม่ใช้ python-dotenv) — ไม่มีไฟล์ก็ข้ามเงียบๆ ไม่ error
+    # ใช้ setdefault เสมอ ไม่ทับค่าที่ set มาจาก GitHub Actions secrets อยู่แล้วตอนรันใน CI จริง
+    if not os.path.isfile(path):
+        return
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, _, value = line.partition("=")
+            os.environ.setdefault(key.strip(), value.strip())
+
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--workspace", required=True, help="Fabric workspace ID (GUID)")
 parser.add_argument("--environment", default="dev")
 args = parser.parse_args()
 
+_load_dotenv(os.path.join(BASE_DIR, "..", ".env"))
 _clean_pycache(REPO_ITEMS_DIR)
 
 credential = ClientSecretCredential(
