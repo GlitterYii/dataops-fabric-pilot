@@ -1,11 +1,11 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
   "metadata": {
-    "type": "DataPipeline",
-    "displayName": "pl_test_2"
+    "type": "Dataflow",
+    "displayName": "df_test_dataflow"
   },
   "config": {
     "version": "2.0",
-    "logicalId": "b7d6c32c-b252-b2e5-4fd6-6d440a35432a"
+    "logicalId": "4859b424-0fd2-85e8-4551-c1054231c14c"
   }
 }

@@ -23,6 +23,7 @@ _defaults:
   Notebook: unit_test
   DataPipeline: structure
   Lakehouse: schema
+  Warehouse: schema
 # --- Override เฉพาะ item ที่ต้องการ pattern ต่างจาก default ของ type, หรือ skip_check ---
 
 pl_test_2:
@@ -42,6 +43,19 @@ nb_test_connection:
 nb_mcp_test:
   skip_check: true
   skip_reason: Bulk onboarding 2026-09-02 — ยังไม่มี unit test ให้ item นี้ ต้องเขียนเพิ่มแล้วเอา skip_check ออก
+
+# pl_test_sp_connection_experiment ไม่ต้องมี entry แล้ว — ไม่เปล่าอีกต่อไป (มี RefreshDataflow
+# activity อ้างอิง df_test_dataflow จริงตั้งแต่ 2026-09-07) ใช้ default "structure" ของ
+# DataPipeline ได้ตรงตัว (validate_pipeline_structure.py เช็ค dataflowId เจอ logicalId ที่รู้จักแล้ว)
+
+df_test_dataflow:
+  skip_check: true
+  skip_reason: >-
+    Dataflow Gen2 test item (2026-09-07) สำหรับทดลอง Copy Data ต่อยอด — ยังไม่มี validator
+    ที่เข้าใจ format ของ Dataflow (mashup.pq / queryMetadata.json ต่างจาก pipeline-content.json
+    ของ DataPipeline หรือ table schema ของ Lakehouse/Warehouse โดยสิ้นเชิง) เขียน validator ที่
+    เหมาะสมแล้วค่อยเอา skip_check ออก
+
 # --- เพิ่มโดย generate_ci_config.py (2026-09-03) ---
 nb_draft-rollback_helper:
   skip_check: true
