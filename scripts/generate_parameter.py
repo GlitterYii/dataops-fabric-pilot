@@ -63,17 +63,24 @@ def load_yaml(path):
         return yaml.safe_load(f) or {}
 
 
-def list_fabric_items():
-    items = []
-    for entry in sorted(os.listdir(FABRIC_ITEMS_DIR)):
-        full_path = os.path.join(FABRIC_ITEMS_DIR, entry)
-        if not os.path.isdir(full_path):
-            continue  # ข้าม parameter.yml และไฟล์อื่นที่ไม่ใช่ item folder
-        if "." not in entry:
+def _iter_item_dirs():
+    """
+    ไล่หา item folder แบบ recursive ผ่าน marker ".platform" (ไฟล์ที่ Fabric สร้างให้ทุก item จริง)
+    แทน os.listdir ระดับเดียว — เพราะ item อาจอยู่ใต้ Fabric workspace folder ได้ (เช่น fabric_items/yayee/...)
+    yield (name, fabric_type, full_path) ไม่ descend ต่อเข้าไปในโฟลเดอร์ item เอง (Tables/, Files/ ฯลฯ)
+    """
+    for dirpath, dirnames, filenames in os.walk(FABRIC_ITEMS_DIR):
+        if ".platform" not in filenames:
             continue
-        name, fabric_type = entry.rsplit(".", 1)
-        items.append((name, fabric_type))
-    return items
+        entry = os.path.basename(dirpath)
+        if "." in entry:
+            name, fabric_type = entry.rsplit(".", 1)
+            yield name, fabric_type, dirpath
+        dirnames[:] = []  # หยุดไต่ลึกต่อจาก item folder นี้
+
+
+def list_fabric_items():
+    return sorted((name, fabric_type) for name, fabric_type, _ in _iter_item_dirs())
 
 
 def extract_first_metadata_block(notebook_text):
@@ -113,11 +120,10 @@ def scan_notebook_lakehouse_refs():
     unnamed_known_ids = set()
     unresolved_notebooks = []
 
-    for entry in sorted(os.listdir(FABRIC_ITEMS_DIR)):
-        if not entry.endswith(".Notebook"):
+    for name, fabric_type, item_dir in sorted(_iter_item_dirs()):
+        if fabric_type != "Notebook":
             continue
-        name = entry[: -len(".Notebook")]
-        content_path = os.path.join(FABRIC_ITEMS_DIR, entry, "notebook-content.py")
+        content_path = os.path.join(item_dir, "notebook-content.py")
         if not os.path.exists(content_path):
             unresolved_notebooks.append(name)
             continue
@@ -183,11 +189,10 @@ def scan_pipeline_refs():
     connection_ids = set()
     unresolved_pipelines = []
 
-    for entry in sorted(os.listdir(FABRIC_ITEMS_DIR)):
-        if not entry.endswith(".DataPipeline"):
+    for name, fabric_type, item_dir in sorted(_iter_item_dirs()):
+        if fabric_type != "DataPipeline":
             continue
-        name = entry[: -len(".DataPipeline")]
-        content_path = os.path.join(FABRIC_ITEMS_DIR, entry, "pipeline-content.json")
+        content_path = os.path.join(item_dir, "pipeline-content.json")
         if not os.path.exists(content_path):
             unresolved_pipelines.append(name)
             continue

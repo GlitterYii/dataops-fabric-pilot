@@ -52,15 +52,19 @@ def load_yaml(path):
 
 
 def list_fabric_items():
+    # recursive ผ่าน os.walk + marker ".platform" (ไฟล์ที่ Fabric สร้างให้ทุก item จริง) แทนการ
+    # os.listdir ระดับเดียว — เพราะ item อาจอยู่ใต้ Fabric workspace folder ได้ (เช่น fabric_items/yayee/...)
+    # ไม่ descend ต่อเข้าไปในโฟลเดอร์ item เอง (Tables/, Files/ ฯลฯ) เพราะข้างในไม่มี item ซ้อนอีก
     items = []
-    for entry in sorted(os.listdir(FABRIC_ITEMS_DIR)):
-        full_path = os.path.join(FABRIC_ITEMS_DIR, entry)
-        if not os.path.isdir(full_path):
-            continue  # ข้าม parameter.yml และไฟล์อื่นที่ไม่ใช่ item folder
-        if "." not in entry:
+    for dirpath, dirnames, filenames in os.walk(FABRIC_ITEMS_DIR):
+        if ".platform" not in filenames:
             continue
-        name, fabric_type = entry.rsplit(".", 1)
-        items.append((name, fabric_type))
+        entry = os.path.basename(dirpath)
+        if "." in entry:
+            name, fabric_type = entry.rsplit(".", 1)
+            items.append((name, fabric_type))
+        dirnames[:] = []  # หยุดไต่ลึกต่อจาก item folder นี้
+    items.sort()
     return items
 
 

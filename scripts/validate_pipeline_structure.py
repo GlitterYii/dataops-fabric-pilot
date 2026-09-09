@@ -14,7 +14,10 @@ REFERENCE_KEYS = ("notebookId", "dataflowId", "pipelineId")
 
 def _load_known_logical_ids(repo_root: str) -> set:
     ids = set()
-    for platform_file in glob.glob(os.path.join(repo_root, "fabric_items", "*", ".platform")):
+    # recursive (**) เพราะ item อาจอยู่ใต้ Fabric workspace folder ได้กี่ชั้นก็ได้
+    # (fabric_items/<folder>/<item>.<Type>/.platform) ไม่ใช่แค่ fabric_items/<item>.<Type>/.platform
+    pattern = os.path.join(repo_root, "fabric_items", "**", ".platform")
+    for platform_file in glob.glob(pattern, recursive=True):
         with open(platform_file, encoding="utf-8") as f:
             data = json.load(f)
         logical_id = data.get("config", {}).get("logicalId")
@@ -23,13 +26,26 @@ def _load_known_logical_ids(repo_root: str) -> set:
     return ids
 
 
+def _find_repo_root(item_path: str) -> str:
+    # หา repo root โดยไต่ขึ้นจนเจอโฟลเดอร์ชื่อ "fabric_items" แล้วขึ้นอีก 1 ชั้น — ทำแบบนี้แทนการ
+    # fix ".."*N ตายตัว เพราะ item อาจอยู่ลึกกว่าเดิมได้ถ้าอยู่ใต้ Fabric workspace folder
+    path = os.path.abspath(item_path)
+    while True:
+        parent, name = os.path.split(path)
+        if name == "fabric_items":
+            return parent
+        if parent == path:
+            raise RuntimeError(f"could not locate 'fabric_items' ancestor of {item_path}")
+        path = parent
+
+
 def validate(item_path: str) -> bool:
     content_files = glob.glob(os.path.join(item_path, "*.json"))
     if not content_files:
         print(f"[validate_pipeline_structure] {item_path}: no content JSON found")
         return False
 
-    repo_root = os.path.abspath(os.path.join(item_path, "..", ".."))
+    repo_root = _find_repo_root(item_path)
     known_ids = _load_known_logical_ids(repo_root)
 
     ok = True
