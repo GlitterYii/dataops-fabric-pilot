@@ -3,14 +3,14 @@ import os
 
 _NOTEBOOK_PATH = os.path.join(
     os.path.dirname(__file__), "..", "..",
-    "fabric_items", "nb_sales_transform.Notebook", "notebook-content.py",
+    "fabric_items", "yayee", "nb_yayee_sales_transform.Notebook", "notebook-content.py",
 )
 
-_spec = importlib.util.spec_from_file_location("nb_sales_transform", _NOTEBOOK_PATH)
-nb_sales_transform = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(nb_sales_transform)
+_spec = importlib.util.spec_from_file_location("nb_yayee_sales_transform", _NOTEBOOK_PATH)
+nb_yayee_sales_transform = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(nb_yayee_sales_transform)
 
-calculate_regional_sales = nb_sales_transform.calculate_regional_sales
+calculate_regional_sales = nb_yayee_sales_transform.calculate_regional_sales
 
 
 def test_sums_amount_per_region():
