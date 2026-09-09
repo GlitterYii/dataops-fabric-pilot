@@ -33,3 +33,11 @@ df_test_dataflow:
     ที่เข้าใจ format ของ Dataflow (mashup.pq / queryMetadata.json ต่างจาก pipeline-content.json
     ของ DataPipeline หรือ table schema ของ Lakehouse/Warehouse โดยสิ้นเชิง) เขียน validator ที่
     เหมาะสมแล้วค่อยเอา skip_check ออก
+
+nb_yayee_sales_transform:
+  skip_check: true
+  skip_reason: >-
+    Demo scenario item (2026-09-09) — เนื้อหาเป็นโค้ดระดับ Spark table (spark.table("sales")
+    .withColumn(...).saveAsTable(...)) แก้ live ตอน demo team collaboration ไม่ใช่ pure function
+    เหมือน calculate_regional_sales ตัวเดิม เลยไม่มี unit test ที่ทดสอบได้จริงแบบ isolated
+    (ต้องใช้ Spark session จริง) เขียน integration test ให้เหมาะสมแล้วค่อยเอา skip_check ออก
