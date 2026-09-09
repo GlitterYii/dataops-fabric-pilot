@@ -41,3 +41,11 @@ nb_yayee_sales_transform:
     .withColumn(...).saveAsTable(...)) แก้ live ตอน demo team collaboration ไม่ใช่ pure function
     เหมือน calculate_regional_sales ตัวเดิม เลยไม่มี unit test ที่ทดสอบได้จริงแบบ isolated
     (ต้องใช้ Spark session จริง) เขียน integration test ให้เหมาะสมแล้วค่อยเอา skip_check ออก
+
+nb_fern_dq_check:
+  skip_check: true
+  skip_reason: >-
+    Demo scenario item (2026-09-09) — Great Expectations checkpoint ที่ assert ตรงบน
+    spark.table("inventory") ผ่าน Notebook Activity ของ pl_fern_inventory_dq ไม่ใช่ pure
+    function เหมือนกัน ต้องมี Spark session + great_expectations จริงถึงจะรันทดสอบได้
+    เขียน integration test ให้เหมาะสมแล้วค่อยเอา skip_check ออก
