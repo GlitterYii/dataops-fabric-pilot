@@ -26,28 +26,6 @@ _defaults:
   Warehouse: schema
 # --- Override เฉพาะ item ที่ต้องการ pattern ต่างจาก default ของ type, หรือ skip_check ---
 
-pl_test_2:
-  skip_check: true
-  skip_reason: "Demo pipeline สำหรับสาธิต CI/CD flow เท่านั้น ไม่มี activity จริง"
-
-nb_test_connection:
-  check: none
-  # ไม่มี business logic ให้ unit test จริง (แค่ import + comment ทดสอบ connection)
-  # test เดิม (test_nb_test_connection.py) เป็นแค่ placeholder "assert True" ที่ไม่เช็คอะไรจริง — ลบทิ้งแล้ว
-  # ใช้ check: none แทน unit_test เพื่อไม่ให้ CI "Pass" แบบหลอกๆ ว่ามีการเช็คทั้งที่ไม่มี
-
-# pl_test_pipeline, lh_test_lakehouse, nb_sales_transform,
-# nb_test_source_and_destination, pl_test_source_and_destination
-# ไม่ต้องมี entry เลย — ใช้ default ตาม fabric_type ของตัวเองจาก _defaults ด้านบนได้ตรงอยู่แล้ว
-
-nb_mcp_test:
-  skip_check: true
-  skip_reason: Bulk onboarding 2026-09-02 — ยังไม่มี unit test ให้ item นี้ ต้องเขียนเพิ่มแล้วเอา skip_check ออก
-
-# pl_test_sp_connection_experiment ไม่ต้องมี entry แล้ว — ไม่เปล่าอีกต่อไป (มี RefreshDataflow
-# activity อ้างอิง df_test_dataflow จริงตั้งแต่ 2026-09-07) ใช้ default "structure" ของ
-# DataPipeline ได้ตรงตัว (validate_pipeline_structure.py เช็ค dataflowId เจอ logicalId ที่รู้จักแล้ว)
-
 df_test_dataflow:
   skip_check: true
   skip_reason: >-
@@ -56,8 +34,18 @@ df_test_dataflow:
     ของ DataPipeline หรือ table schema ของ Lakehouse/Warehouse โดยสิ้นเชิง) เขียน validator ที่
     เหมาะสมแล้วค่อยเอา skip_check ออก
 
-# --- เพิ่มโดย generate_ci_config.py (2026-09-03) ---
-nb_draft-rollback_helper:
+nb_yayee_sales_transform:
   skip_check: true
-  skip_reason: Bulk onboarding 2026-09-03 — ยังไม่มี unit test ให้ item นี้ ต้องเขียนเพิ่มแล้วเอา
-    skip_check ออก
+  skip_reason: >-
+    Demo scenario item (2026-09-09) — เนื้อหาเป็นโค้ดระดับ Spark table (spark.table("sales")
+    .withColumn(...).saveAsTable(...)) แก้ live ตอน demo team collaboration ไม่ใช่ pure function
+    เหมือน calculate_regional_sales ตัวเดิม เลยไม่มี unit test ที่ทดสอบได้จริงแบบ isolated
+    (ต้องใช้ Spark session จริง) เขียน integration test ให้เหมาะสมแล้วค่อยเอา skip_check ออก
+
+nb_fern_dq_check:
+  skip_check: true
+  skip_reason: >-
+    Demo scenario item (2026-09-09) — Great Expectations checkpoint ที่ assert ตรงบน
+    spark.table("inventory") ผ่าน Notebook Activity ของ pl_fern_inventory_dq ไม่ใช่ pure
+    function เหมือนกัน ต้องมี Spark session + great_expectations จริงถึงจะรันทดสอบได้
+    เขียน integration test ให้เหมาะสมแล้วค่อยเอา skip_check ออก

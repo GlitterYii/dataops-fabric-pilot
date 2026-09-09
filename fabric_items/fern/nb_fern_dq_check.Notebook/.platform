@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Notebook",
+    "displayName": "nb_fern_dq_check",
+    "description": "Great Expectations checkpoint for inventory DQ check, referenced by pl_fern_inventory_dq's Notebook Activity (demo scenario)"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "b7da6ffb-343c-b25b-4471-81aae658f0c8"
+  }
+}
