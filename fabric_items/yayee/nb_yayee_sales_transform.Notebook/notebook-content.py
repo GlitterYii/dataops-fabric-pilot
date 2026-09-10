@@ -11,6 +11,7 @@
 
 # CELL ********************
 
+# test
 from pyspark.sql.functions import when, col
 
 df = spark.table("sales")
