@@ -24,6 +24,7 @@
 
 import great_expectations as ge
 
+# fern: demo edit (2026-09-10) — simulate a parallel branch commit for the collaboration demo
 df = spark.table("inventory").toPandas()
 ge_df = ge.from_pandas(df)
 result = ge_df.expect_column_values_to_not_be_null("qty_on_hand")
