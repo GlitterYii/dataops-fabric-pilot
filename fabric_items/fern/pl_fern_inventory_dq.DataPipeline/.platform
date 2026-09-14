@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "DataPipeline",
+    "displayName": "pl_fern_inventory_dq"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "20dc9e0a-3ce5-84f7-4dc9-3d41249778ed"
+  }
+}
