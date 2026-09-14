@@ -5,7 +5,7 @@ import pandas as pd
 
 _NOTEBOOK_PATH = os.path.join(
     os.path.dirname(__file__), "..", "..",
-    "fabric_items", "fern", "nb_fern_dq_check.Notebook", "notebook-content.py",
+    "fabric_items", "nb_fern_dq_check.Notebook", "notebook-content.py",
 )
 
 _spec = importlib.util.spec_from_file_location("nb_fern_dq_check", _NOTEBOOK_PATH)
