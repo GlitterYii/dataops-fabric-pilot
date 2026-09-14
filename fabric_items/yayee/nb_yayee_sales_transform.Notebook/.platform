@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Notebook",
+    "displayName": "nb_yayee_sales_transform"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "683c52db-94bf-8463-4e6b-e498a350ebcc"
+  }
+}
