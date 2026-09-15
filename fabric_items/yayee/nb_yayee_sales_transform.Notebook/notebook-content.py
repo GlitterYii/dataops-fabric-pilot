@@ -16,7 +16,7 @@ from pyspark.sql.functions import when, col
 df = spark.table("sales")
 df = df.withColumn(
     "region",
-    when(col("product_id").isin("P001"), "BKK").otherwise("CNX")
+    when(col("product_id").isin("P001"), "BKK").otherwise("BKK")
 )
 df.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("sales")
 
