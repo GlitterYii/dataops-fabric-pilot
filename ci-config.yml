@@ -38,3 +38,7 @@ nb_yayee_sales_transform:
   skip_check: true
   skip_reason: >-
     Demo scenario item (2026-09-09)
+
+# DEMO BUG (2026-09-15): comment-only marker injected on purpose to rehearse
+# the git rollback flow (revert + PR + redeploy). Safe to merge/revert —
+# does not change any check pattern or item behavior.
