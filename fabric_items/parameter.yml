@@ -47,3 +47,25 @@ find_replace:
     replace_value:
       _ALL_: "$items.Warehouse.wh_test_warehouse.$id"
     item_type: "DataPipeline"
+
+# --- nb_endpoint_test (section 14 Phase 6: cross-workspace pipeline → endpoint deploy) ---
+# ต่างจาก entry ด้านบน: Lakehouse ปลายทางอยู่คนละ workspace จาก pipeline/notebook เอง
+# (spl-cicd-endpoint-dev/prd ไม่ใช่ spl-cicd-dev/prd) ทำให้ $items.<type>.<name>.$id /
+# $workspace.$id resolve ไม่ได้ (มันมองเห็นแค่ item ภายใน target workspace ของ deploy
+# ครั้งนั้นเท่านั้น) ต้อง hardcode workspace id + lakehouse id ของ endpoint ต่อ environment แทน
+
+  # workspace id ของ endpoint (เขียนตรงเป็น abfss:// path ในโค้ด ไม่ใช้ default_lakehouse attach)
+  - find_value: "30e32f68-1cee-419b-be00-c0671b00f7af"
+    replace_value:
+      _ALL_: "88302912-33a1-4435-bb8a-814b8cbc4808"
+    item_type: "Notebook"
+    item_name: "nb_endpoint_test"
+
+  # TODO: lakehouse id ของ lh_endpoint_test_a ใน spl-cicd-endpoint-dev/prd — ยังไม่รู้ค่า
+  # เพราะยังไม่เคยรัน deploy-dev-endpoint/deploy-prod-endpoint job จริง (จะสร้าง Lakehouse
+  # ให้อัตโนมัติตอนรันครั้งแรก) กลับมาเติม entry นี้หลังรู้ ID ทั้งคู่:
+  # - find_value: "<DEV lh_endpoint_test_a artifact id>"
+  #   replace_value:
+  #     _ALL_: "<PROD lh_endpoint_test_a artifact id>"
+  #   item_type: "Notebook"
+  #   item_name: "nb_endpoint_test"

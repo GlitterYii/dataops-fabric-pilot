@@ -38,3 +38,21 @@ nb_yayee_sales_transform:
   skip_check: true
   skip_reason: >-
     Demo scenario item (2026-09-09)
+
+nb_endpoint_test:
+  skip_check: true
+  skip_reason: >-
+    Pilot test item (2026-09-17) สำหรับ DataOps-CICD-Workflow.md section 14 Phase 6
+    (cross-workspace pipeline → endpoint deploy) — ยังไม่มี unit test, จะเพิ่มถ้า pattern
+    นี้ผ่านการทดสอบแล้วนำไปใช้จริง
+
+pl_endpoint_test:
+  skip_check: true
+  skip_reason: >-
+    Pilot test item (2026-09-17) คู่กับ nb_endpoint_test — ดู section 14 Phase 6
+
+lh_endpoint_test_a:
+  skip_check: true
+  skip_reason: >-
+    Pilot test item (2026-09-17) — Lakehouse endpoint สำหรับทดสอบ cross-workspace write
+    ใน section 14 Phase 6 ไม่มี schema contract จริงให้เช็ค (แค่ table ทดสอบ 1 ตัว)

@@ -22,9 +22,29 @@
 
 # CELL ********************
 
-# Welcome to your new notebook
-# Type here in the cell editor to add code!
+# ทดสอบ cross-workspace write: pipeline/notebook นี้อยู่ spl-cicd-dev แต่เขียนข้อมูลออกไปยัง
+# Lakehouse lh_endpoint_test_a ที่อยู่คนละ workspace (spl-cicd-endpoint-dev/prd) ดู
+# DataOps-CICD-Workflow.md section 14 Phase 6
+#
+# เขียนผ่าน abfss:// path ตรงๆ (ไม่ใช้ default_lakehouse attach, ไม่ใช้ Copy Activity)
+# เพื่อเลี่ยงบั๊ก Connection-permission ที่เจอมาแล้ว (section 15) — Spark เขียนเข้า OneLake
+# ผ่านสิทธิ์ workspace โดยตรง ไม่ต้องพึ่ง Connection object เลย
+#
+# ค่า 2 ตัวนี้เป็นของ spl-cicd-endpoint-dev (ตอนสร้างตาม UI-first rule) — ต้อง remap ผ่าน
+# parameter.yml ตอน deploy เข้า prod (ดู draft-parameter-endpoint.yml ใน DataOps repo)
+ENDPOINT_WORKSPACE_ID = "30e32f68-1cee-419b-be00-c0671b00f7af"  # spl-cicd-endpoint-dev
+ENDPOINT_LAKEHOUSE_ID = "TODO_FILL_AFTER_FIRST_DEV_ENDPOINT_DEPLOY"  # lh_endpoint_test_a ใน spl-cicd-endpoint-dev
 
+endpoint_path = (
+    f"abfss://{ENDPOINT_WORKSPACE_ID}@onelake.dfs.fabric.microsoft.com/"
+    f"{ENDPOINT_LAKEHOUSE_ID}/Tables/ci_endpoint_test"
+)
+
+df = spark.createDataFrame(
+    [(1, "cross-workspace-write-ok")],
+    ["id", "note"],
+)
+df.write.format("delta").mode("overwrite").save(endpoint_path)
 
 # METADATA ********************
 
