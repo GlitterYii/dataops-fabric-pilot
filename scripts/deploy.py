@@ -57,19 +57,19 @@ def _clean_pycache(root: str) -> None:
             dirnames.remove("__pycache__")
 
 
-def _make_scoped_items_dir(items_path: str) -> str:
+def _make_scoped_items_dir(items_root: str, items_path: str) -> str:
     # จำกัด publish ให้เหลือแค่ item เดียว (ใช้ตอน pipeline/notebook กับ endpoint Lakehouse
     # ต้องไป publish เข้าคนละ workspace — ดู DataOps-CICD-Workflow.md section 14 Phase 6)
     # ทำโดยก็อป item folder ที่ต้องการ + parameter.yml เข้า temp dir แล้วชี้
-    # repository_directory ไปที่ temp dir นั้นแทน REPO_ITEMS_DIR เดิมทั้งก้อน
-    item_src = os.path.join(REPO_ITEMS_DIR, items_path)
+    # repository_directory ไปที่ temp dir นั้นแทน items_root เดิมทั้งก้อน
+    item_src = os.path.join(items_root, items_path)
     if not os.path.isdir(item_src):
         raise SystemExit(f"--items-path ไม่พบ item folder: {item_src}")
 
     scoped_dir = tempfile.mkdtemp(prefix="fabric_deploy_scope_")
     shutil.copytree(item_src, os.path.join(scoped_dir, os.path.basename(item_src.rstrip(os.sep))))
 
-    param_src = os.path.join(REPO_ITEMS_DIR, "parameter.yml")
+    param_src = os.path.join(items_root, "parameter.yml")
     if os.path.isfile(param_src):
         shutil.copy2(param_src, os.path.join(scoped_dir, "parameter.yml"))
 
@@ -98,21 +98,33 @@ parser.add_argument(
     "--items-path",
     default=None,
     help=(
-        "จำกัด publish เฉพาะ item ใต้ path นี้ (relative ต่อ fabric_items/ เช่น "
-        "lh_endpoint_test.Lakehouse) ใช้ตอน item บางตัวต้องไป publish เข้าคนละ workspace "
-        "จาก item อื่นๆ ใน repo เดียวกัน (ดู DataOps-CICD-Workflow.md section 14 Phase 6) "
+        "จำกัด publish เฉพาะ item ใต้ path นี้ (relative ต่อ fabric_items/ หรือต่อ --repo-dir "
+        "ถ้าใส่ไว้ เช่น lh_endpoint_test.Lakehouse) ใช้ตอน item บางตัวต้องไป publish เข้าคนละ "
+        "workspace จาก item อื่นๆ ใน repo เดียวกัน (ดู DataOps-CICD-Workflow.md section 14 Phase 6) "
         "— ถ้าใส่ flag นี้ unpublish_all_orphan_items() จะถูกข้าม เพราะ scoped dir มีแค่ "
         "item เดียว จะเข้าใจผิดว่า item อื่นในปลายทาง (ถ้ามี) เป็น orphan ทั้งหมด"
+    ),
+)
+parser.add_argument(
+    "--repo-dir",
+    default=None,
+    help=(
+        "ใช้โฟลเดอร์อื่นแทน fabric_items/ เป็น repository_directory (relative ต่อ repo root) "
+        "สำหรับกรณีมี Git Integration แยกต่างหากที่ sync item เข้าโฟลเดอร์คนละที่ (เช่น item "
+        "ที่ authored จาก workspace อื่นที่ไม่ใช่ spl-cicd-dev) — ต้องมี parameter.yml ของ "
+        "ตัวเองอยู่ที่ root ของโฟลเดอร์นี้ด้วยถ้าต้อง remap GUID ข้าม environment"
     ),
 )
 args = parser.parse_args()
 
 _load_dotenv(os.path.join(BASE_DIR, "..", ".env"))
 
-repo_dir = REPO_ITEMS_DIR
+items_root = os.path.join(BASE_DIR, "..", args.repo_dir) if args.repo_dir else REPO_ITEMS_DIR
+
+repo_dir = items_root
 scoped_dir = None
 if args.items_path:
-    scoped_dir = _make_scoped_items_dir(args.items_path)
+    scoped_dir = _make_scoped_items_dir(items_root, args.items_path)
     repo_dir = scoped_dir
 
 _clean_pycache(repo_dir)
