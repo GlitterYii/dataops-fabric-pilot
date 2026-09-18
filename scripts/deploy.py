@@ -2,6 +2,7 @@ import os
 import shutil
 import tempfile
 import argparse
+import yaml
 from fabric_cicd import FabricWorkspace, publish_all_items, unpublish_all_orphan_items
 from azure.identity import ClientSecretCredential
 
@@ -57,6 +58,26 @@ def _clean_pycache(root: str) -> None:
             dirnames.remove("__pycache__")
 
 
+def _filter_parameter_file(param_path: str, item_name: str) -> None:
+    # parameter.yml เดิมมี rule ของ item อื่นที่ไม่ได้อยู่ใน scoped dir นี้ด้วย (เช่น rule
+    # ของ nb_endpoint_test ตอน scope แค่ lh_endpoint_test_a) — ถ้าปล่อยไว้ fabric-cicd จะ log
+    # "[error] Item name '...' not found in the repository directory" ทุกครั้ง (ไม่ fail
+    # จริง แค่ log น่าตกใจเปล่าๆ) กรองเหลือแค่ rule ที่ไม่ระบุ item_name (apply ทุก item)
+    # หรือ item_name ตรงกับ item ที่ scope อยู่จริงเท่านั้น
+    with open(param_path, encoding="utf-8") as f:
+        config = yaml.safe_load(f) or {}
+
+    for key in ("find_replace", "key_value_replace"):
+        if key in config:
+            config[key] = [
+                rule for rule in config[key]
+                if rule.get("item_name") in (None, item_name)
+            ]
+
+    with open(param_path, "w", encoding="utf-8") as f:
+        yaml.safe_dump(config, f, allow_unicode=True, sort_keys=False)
+
+
 def _make_scoped_items_dir(items_root: str, items_path: str) -> str:
     # จำกัด publish ให้เหลือแค่ item เดียว (ใช้ตอน pipeline/notebook กับ endpoint Lakehouse
     # ต้องไป publish เข้าคนละ workspace — ดู DataOps-CICD-Workflow.md section 14 Phase 6)
@@ -67,11 +88,14 @@ def _make_scoped_items_dir(items_root: str, items_path: str) -> str:
         raise SystemExit(f"--items-path ไม่พบ item folder: {item_src}")
 
     scoped_dir = tempfile.mkdtemp(prefix="fabric_deploy_scope_")
+    item_name = os.path.basename(item_src.rstrip(os.sep)).rsplit(".", 1)[0]
     shutil.copytree(item_src, os.path.join(scoped_dir, os.path.basename(item_src.rstrip(os.sep))))
 
     param_src = os.path.join(items_root, "parameter.yml")
     if os.path.isfile(param_src):
-        shutil.copy2(param_src, os.path.join(scoped_dir, "parameter.yml"))
+        param_dst = os.path.join(scoped_dir, "parameter.yml")
+        shutil.copy2(param_src, param_dst)
+        _filter_parameter_file(param_dst, item_name)
 
     return scoped_dir
 
