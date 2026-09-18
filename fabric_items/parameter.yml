@@ -61,16 +61,11 @@ find_replace:
     item_type: "Notebook"
     item_name: "nb_endpoint_test"
 
-  # lakehouse id ของ lh_endpoint_test_a ใน spl-cicd-endpoint-dev — ยืนยันแล้วหลัง
-  # deploy-dev-endpoint job รันครั้งแรก (2026-09-18): 04a575b1-f277-4fa2-84d4-5214992b8ed0
-  #
-  # ฝั่ง prod ยังไม่รู้ค่า เพราะ deploy-prod-endpoint ยังไม่เคยรัน (trigger แค่ตอน push
-  # เข้า main) — ตั้งใจ "ไม่" เปิด rule นี้ก่อนรู้ค่าจริงทั้งคู่ (ถ้าใส่ placeholder ปลอมๆ
-  # ไปตรงนี้ fabric-cicd จะเขียนมันลงจริงในไฟล์ notebook ที่ deploy เข้า prod — พังแบบเงียบๆ
-  # แทนที่จะพังแบบชัดเจน) ปล่อยให้ dev id เดิมผ่านไปก่อน (จะ fail แบบชัดเจนที่ prod เพราะหา
-  # Lakehouse ID นั้นใน spl-cicd-endpoint-prd ไม่เจอ) แล้วค่อยเปิด rule นี้จริงหลังรู้ ID:
-  # - find_value: "04a575b1-f277-4fa2-84d4-5214992b8ed0"
-  #   replace_value:
-  #     _ALL_: "<PROD lh_endpoint_test_a artifact id>"
-  #   item_type: "Notebook"
-  #   item_name: "nb_endpoint_test"
+  # lakehouse id ของ lh_endpoint_test_a — dev ยืนยันหลัง deploy-dev-endpoint รันครั้งแรก
+  # (2026-09-18), prod ยืนยันหลัง deploy-prod-endpoint รันครั้งแรกตอน merge PR #80 เข้า main
+  # (2026-09-18, ผ่าน onelake_list-items/core_search-catalog) — เปิด rule จริงแล้ว
+  - find_value: "04a575b1-f277-4fa2-84d4-5214992b8ed0"
+    replace_value:
+      _ALL_: "c1ac5acf-2e59-4cdd-921a-a35a9eb9c6e5"
+    item_type: "Notebook"
+    item_name: "nb_endpoint_test"
