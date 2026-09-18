@@ -33,7 +33,7 @@
 # ค่า 2 ตัวนี้เป็นของ spl-cicd-endpoint-dev (ตอนสร้างตาม UI-first rule) — ต้อง remap ผ่าน
 # parameter.yml ตอน deploy เข้า prod (ดู draft-parameter-endpoint.yml ใน DataOps repo)
 ENDPOINT_WORKSPACE_ID = "30e32f68-1cee-419b-be00-c0671b00f7af"  # spl-cicd-endpoint-dev
-ENDPOINT_LAKEHOUSE_ID = "TODO_FILL_AFTER_FIRST_DEV_ENDPOINT_DEPLOY"  # lh_endpoint_test_a ใน spl-cicd-endpoint-dev
+ENDPOINT_LAKEHOUSE_ID = "04a575b1-f277-4fa2-84d4-5214992b8ed0"  # lh_endpoint_test_a ใน spl-cicd-endpoint-dev (สร้างโดย deploy-dev-endpoint job)
 
 endpoint_path = (
     f"abfss://{ENDPOINT_WORKSPACE_ID}@onelake.dfs.fabric.microsoft.com/"

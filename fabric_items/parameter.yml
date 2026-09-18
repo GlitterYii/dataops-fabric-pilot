@@ -61,10 +61,15 @@ find_replace:
     item_type: "Notebook"
     item_name: "nb_endpoint_test"
 
-  # TODO: lakehouse id ของ lh_endpoint_test_a ใน spl-cicd-endpoint-dev/prd — ยังไม่รู้ค่า
-  # เพราะยังไม่เคยรัน deploy-dev-endpoint/deploy-prod-endpoint job จริง (จะสร้าง Lakehouse
-  # ให้อัตโนมัติตอนรันครั้งแรก) กลับมาเติม entry นี้หลังรู้ ID ทั้งคู่:
-  # - find_value: "<DEV lh_endpoint_test_a artifact id>"
+  # lakehouse id ของ lh_endpoint_test_a ใน spl-cicd-endpoint-dev — ยืนยันแล้วหลัง
+  # deploy-dev-endpoint job รันครั้งแรก (2026-09-18): 04a575b1-f277-4fa2-84d4-5214992b8ed0
+  #
+  # ฝั่ง prod ยังไม่รู้ค่า เพราะ deploy-prod-endpoint ยังไม่เคยรัน (trigger แค่ตอน push
+  # เข้า main) — ตั้งใจ "ไม่" เปิด rule นี้ก่อนรู้ค่าจริงทั้งคู่ (ถ้าใส่ placeholder ปลอมๆ
+  # ไปตรงนี้ fabric-cicd จะเขียนมันลงจริงในไฟล์ notebook ที่ deploy เข้า prod — พังแบบเงียบๆ
+  # แทนที่จะพังแบบชัดเจน) ปล่อยให้ dev id เดิมผ่านไปก่อน (จะ fail แบบชัดเจนที่ prod เพราะหา
+  # Lakehouse ID นั้นใน spl-cicd-endpoint-prd ไม่เจอ) แล้วค่อยเปิด rule นี้จริงหลังรู้ ID:
+  # - find_value: "04a575b1-f277-4fa2-84d4-5214992b8ed0"
   #   replace_value:
   #     _ALL_: "<PROD lh_endpoint_test_a artifact id>"
   #   item_type: "Notebook"
