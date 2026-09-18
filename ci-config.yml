@@ -74,3 +74,10 @@ pl_endpoint_test_b:
   skip_check: true
   skip_reason: >-
     Pilot test item (2026-09-18) คู่กับ nb_endpoint_test_b — ดู section 14 Phase 6
+
+lh_endpoint_test_c:
+  skip_check: true
+  skip_reason: >-
+    Pilot test item (2026-09-18) — Test C ของ section 14 Phase 6 (พิสูจน์ว่าเพิ่ม
+    endpoint item ใหม่ผ่าน endpoint-targets.yml อย่างเดียวได้จริง ไม่ต้องแก้
+    fabric-ci.yml) ไม่มี schema contract จริงให้เช็ค เหมือน endpoint item ตัวอื่น
