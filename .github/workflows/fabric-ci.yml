@@ -251,3 +251,54 @@ jobs:
           FABRIC_CLIENT_ID: ${{ secrets.FABRIC_CLIENT_ID }}
           FABRIC_CLIENT_SECRET: ${{ secrets.FABRIC_CLIENT_SECRET }}
           FABRIC_TENANT_ID: ${{ secrets.FABRIC_TENANT_ID }}
+
+  # section 14 Phase 6: cross-workspace pipeline → endpoint deploy test (Test A — shared
+  # authoring). lh_endpoint_test_a อยู่ใน fabric_items/ ตัวเดียวกับ pipeline/notebook แต่
+  # deploy ออกไปคนละ workspace (endpoint) ผ่าน --items-path — จงใจไม่ใส่ needs: deploy-prod
+  # เพื่อให้รันพร้อมกัน (parallel) ไม่ใช่รอต่อคิว ตามที่ต้องการทดสอบ "deploy 2 workspace
+  # พร้อมกัน"
+  deploy-prod-endpoint:
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - name: Deploy endpoint Lakehouse to Fabric (production)
+        run: |
+          python scripts/deploy.py \
+            --workspace 88302912-33a1-4435-bb8a-814b8cbc4808 \
+            --environment prod \
+            --items-path lh_endpoint_test_a.Lakehouse
+        env:
+          FABRIC_CLIENT_ID: ${{ secrets.FABRIC_CLIENT_ID }}
+          FABRIC_CLIENT_SECRET: ${{ secrets.FABRIC_CLIENT_SECRET }}
+          FABRIC_TENANT_ID: ${{ secrets.FABRIC_TENANT_ID }}
+
+  # bootstrap/verify ฝั่ง dev — สร้าง/อัปเดต lh_endpoint_test_a ใน spl-cicd-endpoint-dev
+  # ทุกครั้งที่ push เข้า dev เพื่อให้ pipeline ที่รันตรงใน spl-cicd-dev มี endpoint
+  # Lakehouse ให้เขียนจริงระหว่างทดสอบ (ดู section 14 Phase 6 Preparation)
+  deploy-dev-endpoint:
+    needs: test
+    if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - name: Deploy endpoint Lakehouse to Fabric (dev)
+        run: |
+          python scripts/deploy.py \
+            --workspace 30e32f68-1cee-419b-be00-c0671b00f7af \
+            --environment dev \
+            --items-path lh_endpoint_test_a.Lakehouse
+        env:
+          FABRIC_CLIENT_ID: ${{ secrets.FABRIC_CLIENT_ID }}
+          FABRIC_CLIENT_SECRET: ${{ secrets.FABRIC_CLIENT_SECRET }}
+          FABRIC_TENANT_ID: ${{ secrets.FABRIC_TENANT_ID }}
