@@ -25,6 +25,10 @@ jobs:
       # หา item folder แบบ recursive ผ่านไฟล์ .platform (marker ของ Fabric item จริง) แทนการ glob
       # fabric_items/*/ ระดับเดียว — เพราะ Fabric workspace folder (เช่น /yayee, /fern) ทำให้ item
       # อยู่ลึกกว่า 1 ชั้นได้ (fabric_items/<folder>/<item>.<Type>/) glob ระดับเดียวจะมองไม่เห็น item เลย
+      #
+      # scan ทั้ง fabric_items/ (Git Integration ของ spl-cicd-dev) และ fabric_items_endpoint/
+      # (Git Integration แยกต่างหากของ spl-cicd-endpoint-dev — section 14 Phase 6 Test B)
+      # 2>/dev/null เผื่อโฟลเดอร์ใดโฟลเดอร์หนึ่งยังไม่มีอยู่
       - name: Run checks based on declared pattern
         run: |
           missing=0
@@ -101,7 +105,7 @@ jobs:
                 missing=1
                 ;;
             esac
-          done < <(find fabric_items -name ".platform" | sort)
+          done < <(find fabric_items fabric_items_endpoint -name ".platform" 2>/dev/null | sort)
           if [ "$missing" -eq 1 ]; then
             echo "::error::Some items failed required checks — see log above"
             exit 1
@@ -174,7 +178,7 @@ jobs:
             fi
 
             rows="${rows}| \`$name\` | $fabric_type | \`$check\` | $status |"$'\n'
-          done < <(find fabric_items -name ".platform" | sort)
+          done < <(find fabric_items fabric_items_endpoint -name ".platform" 2>/dev/null | sort)
 
           {
             echo "## 🔍 Fabric Item Check Summary"
@@ -298,6 +302,37 @@ jobs:
             --workspace 30e32f68-1cee-419b-be00-c0671b00f7af \
             --environment dev \
             --items-path lh_endpoint_test_a.Lakehouse
+        env:
+          FABRIC_CLIENT_ID: ${{ secrets.FABRIC_CLIENT_ID }}
+          FABRIC_CLIENT_SECRET: ${{ secrets.FABRIC_CLIENT_SECRET }}
+          FABRIC_TENANT_ID: ${{ secrets.FABRIC_TENANT_ID }}
+
+  # section 14 Phase 6: Test B — independent git channel. lh_endpoint_test_b ไม่ได้
+  # authored ใน spl-cicd-dev แบบ lh_endpoint_test_a (Test A) แต่ authored ตรงใน
+  # spl-cicd-endpoint-dev เอง ผ่าน Git Integration ของตัวเองที่ sync เข้า
+  # fabric_items_endpoint/ (คนละโฟลเดอร์จาก fabric_items/ ของ pipeline) — ใช้ --repo-dir
+  # ที่เพิ่มไว้ใน PR #77 เป็นครั้งแรก ร่วมกับ --items-path เพื่อไม่ไปแตะ
+  # lh_endpoint_test_a ตัวที่หลุดติดเข้ามาใน fabric_items_endpoint/ ตอนเปิด Git
+  # Integration ครั้งแรก (ของ Test A ที่ deploy ไปลง spl-cicd-endpoint-dev อยู่แล้ว)
+  # ไม่ใส่ needs ต่อกับ job อื่น เพื่อให้รันพร้อมกับ deploy-prod/deploy-prod-endpoint
+  deploy-prod-endpoint-b:
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - name: Deploy endpoint Lakehouse B to Fabric (production)
+        run: |
+          python scripts/deploy.py \
+            --workspace 88302912-33a1-4435-bb8a-814b8cbc4808 \
+            --environment prod \
+            --repo-dir fabric_items_endpoint \
+            --items-path lh_endpoint_test_b.Lakehouse
         env:
           FABRIC_CLIENT_ID: ${{ secrets.FABRIC_CLIENT_ID }}
           FABRIC_CLIENT_SECRET: ${{ secrets.FABRIC_CLIENT_SECRET }}
