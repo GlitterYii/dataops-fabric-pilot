@@ -56,3 +56,10 @@ lh_endpoint_test_a:
   skip_reason: >-
     Pilot test item (2026-09-17) — Lakehouse endpoint สำหรับทดสอบ cross-workspace write
     ใน section 14 Phase 6 ไม่มี schema contract จริงให้เช็ค (แค่ table ทดสอบ 1 ตัว)
+
+lh_endpoint_test_b:
+  skip_check: true
+  skip_reason: >-
+    Pilot test item (2026-09-18) — Test B ของ section 14 Phase 6 (independent git channel
+    บน spl-cicd-endpoint-dev เอง แทนการ authored ใน spl-cicd-dev แบบ Test A) ไม่มี schema
+    contract จริงให้เช็คเหมือนกัน
