@@ -69,3 +69,21 @@ find_replace:
       _ALL_: "c1ac5acf-2e59-4cdd-921a-a35a9eb9c6e5"
     item_type: "Notebook"
     item_name: "nb_endpoint_test"
+
+# --- nb_endpoint_test_b (Test B: lh_endpoint_test_b authored ผ่าน Git Integration อิสระ
+# ของ spl-cicd-endpoint-dev เอง — ดู section 14 Phase 6) ---
+
+  # workspace id ของ endpoint (เหมือนของ nb_endpoint_test แต่ scope แยกต่างหากตาม item_name)
+  - find_value: "30e32f68-1cee-419b-be00-c0671b00f7af"
+    replace_value:
+      _ALL_: "88302912-33a1-4435-bb8a-814b8cbc4808"
+    item_type: "Notebook"
+    item_name: "nb_endpoint_test_b"
+
+  # lakehouse id ของ lh_endpoint_test_b — dev/prod ยืนยันแล้วผ่าน core_search-catalog
+  # หลัง deploy-prod-endpoint-b รันครั้งแรก (2026-09-18)
+  - find_value: "e68b8bb0-0ddb-44db-af00-bfd5b855a1ce"
+    replace_value:
+      _ALL_: "1f670883-97a3-4171-af57-a25e16a3a8b8"
+    item_type: "Notebook"
+    item_name: "nb_endpoint_test_b"
