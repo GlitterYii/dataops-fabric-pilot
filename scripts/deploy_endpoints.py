@@ -41,17 +41,21 @@ for item_name, spec in config.items():
         "--items-path", item_path,
     ]
 
-    print(f"::group::Deploy endpoint '{item_name}' -> workspace {workspace_id} (environment={args.environment})")
-    print(" ".join(cmd))
+    # flush=True เสมอ — เดิม stdout buffer แบบ block ตอนไม่ใช่ tty (เช่นใน GitHub Actions
+    # runner) ทำให้ print ของ script นี้ค้างใน buffer แล้วโผล่ "หลัง" output ของ
+    # subprocess (deploy.py, ซึ่งเขียนตรงเข้า fd เดิมแบบไม่ผ่าน buffer) ทำให้ log อ่านแล้ว
+    # เข้าใจผิดว่า error ของ subprocess เกิด "ก่อน" ที่ script นี้จะเริ่ม deploy item นั้นซะอีก
+    print(f"::group::Deploy endpoint '{item_name}' -> workspace {workspace_id} (environment={args.environment})", flush=True)
+    print(" ".join(cmd), flush=True)
     result = subprocess.run(cmd)
-    print("::endgroup::")
+    print("::endgroup::", flush=True)
 
     if result.returncode != 0:
         failed.append(item_name)
 
 if not ran_any:
-    print(f"::notice::ไม่มี endpoint item ไหนใน endpoint-targets.yml ที่มี target สำหรับ environment '{args.environment}'")
+    print(f"::notice::ไม่มี endpoint item ไหนใน endpoint-targets.yml ที่มี target สำหรับ environment '{args.environment}'", flush=True)
 
 if failed:
-    print(f"::error::Endpoint deploy fail: {', '.join(failed)}")
+    print(f"::error::Endpoint deploy fail: {', '.join(failed)}", flush=True)
     sys.exit(1)
